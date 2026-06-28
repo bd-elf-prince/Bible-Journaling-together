@@ -2,45 +2,118 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="말씀을 읽고 절마다 익명 묵상을 나누는 성경 커뮤니티" />
   <title>Bible Journaling Together</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&family=Noto+Serif+KR:wght@400;600;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
+  <header class="app-header">
+    <a class="brand" href="#" aria-label="Bible Journaling Together 홈">
+      <span class="brand-seal">BJT</span>
+      <span><strong>Bible Journaling Together</strong><small>함께 읽고, 나누고, 기록합니다</small></span>
+    </a>
+    <form class="search-form" id="searchForm">
+      <label class="sr-only" for="searchInput">구절 검색</label>
+      <input id="searchInput" type="search" placeholder="구절이나 단어를 검색하세요" />
+      <button type="submit">검색</button>
+    </form>
+  </header>
 
-  <div class="app">
+  <main class="reader-shell">
+    <aside class="sidebar">
+      <section class="intro-card">
+        <p class="eyebrow">Quiet Scripture Room</p>
+        <h1>말씀 앞에<br />잠시 머무는 시간</h1>
+        <p>한 절씩 천천히 읽고, 같은 말씀 앞에 머문 사람들의 마음을 함께 만나보세요.</p>
+      </section>
 
-    <!-- LEFT: BIBLE -->
-    <div class="bible">
+      <section class="controls-card">
+        <div class="control-group">
+          <label for="bookSelect">성경</label>
+          <select id="bookSelect"><option value="genesis">창세기</option></select>
+        </div>
+        <div class="control-row">
+          <div class="control-group">
+            <label for="chapterSelect">장</label>
+            <select id="chapterSelect"><option value="1">1장</option></select>
+          </div>
+          <div class="control-group">
+            <label for="fontSizeSelect">글자 크기</label>
+            <select id="fontSizeSelect">
+              <option value="normal">보통</option>
+              <option value="large">크게</option>
+              <option value="xlarge">아주 크게</option>
+            </select>
+          </div>
+        </div>
+      </section>
 
-      <h1>창세기 1장</h1>
+      <section class="quick-card">
+        <h2>빠른 이동</h2>
+        <div class="quick-links">
+          <button type="button" data-verse="gen-1-1">1절</button>
+          <button type="button" data-verse="gen-1-3">3절</button>
+          <button type="button" data-verse="gen-1-8">8절</button>
+          <button type="button" data-verse="gen-1-10">10절</button>
+        </div>
+      </section>
+      <p class="data-note">절을 누르면 그 절의 익명 묵상과 댓글이 열립니다.</p>
+    </aside>
 
-      <div class="verse" onclick="selectVerse('1')">1 태초에 하나님이 천지를 창조하시니라</div>
-      <div class="verse" onclick="selectVerse('2')">2 땅이 혼돈하고 공허하며</div>
-      <div class="verse" onclick="selectVerse('3')">3 빛이 있으라 하시니 빛이 있었고</div>
-      <div class="verse" onclick="selectVerse('4')">4 하나님이 보시기에 좋았더라</div>
+    <section class="book-stage" aria-label="성경 읽기">
+      <div class="book-toolbar">
+        <button class="nav-button" type="button" id="prevChapter">← 이전 장</button>
+        <div class="chapter-heading">
+          <p class="current-book">Genesis</p>
+          <h2>창세기 1장</h2>
+          <p class="chapter-subtitle">태초의 빛과 창조의 질서</p>
+        </div>
+        <button class="nav-button" type="button" id="nextChapter">다음 장 →</button>
+      </div>
 
+      <div class="book" id="book">
+        <article class="page page-left">
+          <div class="page-inner">
+            <p class="page-label">창세기 · 첫째 날</p>
+            <div class="verses" id="leftVerses"></div>
+          </div>
+        </article>
+        <article class="page page-right">
+          <div class="page-inner">
+            <p class="page-label">창세기 · 둘째 날</p>
+            <div class="verses" id="rightVerses"></div>
+          </div>
+        </article>
+      </div>
+      <p class="message" id="message" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <dialog class="comment-dialog" id="commentDialog">
+    <div class="dialog-header">
+      <div>
+        <p class="dialog-reference" id="dialogReference">창세기 1장 1절</p>
+        <h2>이 절에 머문 마음들</h2>
+      </div>
+      <button class="icon-button" id="closeDialog" type="button" aria-label="닫기">×</button>
     </div>
-
-    <!-- RIGHT: COMMENTS -->
-    <div class="comments">
-
-      <h2>댓글</h2>
-      <div id="selectedVerse">절을 선택하세요</div>
-
-      <div id="commentList"></div>
-
-      <input id="commentInput" placeholder="묵상 작성..." />
-      <button onclick="addComment()">등록</button>
-
+    <p class="dialog-verse" id="dialogVerse"></p>
+    <div class="comment-list-wrap">
+      <div class="comment-list-title"><h3>익명 묵상</h3><span id="commentTotal">0</span></div>
+      <div class="comment-list" id="commentList"></div>
     </div>
+    <form class="comment-form" id="commentForm">
+      <label for="commentInput">나의 묵상<span>로그인 없이 익명으로 저장됩니다.</span></label>
+      <textarea id="commentInput" rows="4" maxlength="1000" placeholder="이 절을 읽으며 떠오른 마음과 깨달음을 남겨보세요." required></textarea>
+      <button type="submit">묵상 남기기</button>
+    </form>
+  </dialog>
 
-  </div>
-
-  <!-- SUPABASE -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <script src="script.js"></script>
-
 </body>
 </html>
