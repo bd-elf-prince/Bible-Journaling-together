@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="성경을 책처럼 넘기며 읽고, 원하는 장절을 바로 검색하는 Bible Journaling Together 성경 리더" />
-  <title>Bible Journaling Together | 성경 리더</title>
+  <meta name="description" content="성경을 정성스럽게 읽고, 절마다 묵상을 남기며 함께 깊어지는 Bible Journaling Together" />
+  <title>Bible Journaling Together | 성경 교환일기</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -12,58 +12,70 @@
 </head>
 <body>
   <header class="app-header">
-    <a class="brand" href="#">
-      <span class="brand-icon">✦</span>
-      <span>Bible Journaling Together</span>
+    <a class="brand" href="#" aria-label="Bible Journaling Together 홈">
+      <span class="brand-seal">BJT</span>
+      <span>
+        <strong>Bible Journaling Together</strong>
+        <small>성경 교환일기</small>
+      </span>
     </a>
     <form id="search-form" class="search-form" autocomplete="off">
       <label class="sr-only" for="passage-search">성경 구절 검색</label>
       <input id="passage-search" type="search" placeholder="예: 요한복음 3:16, 창세기 1장, 시편 23편" />
-      <button type="submit">펴기</button>
+      <button type="submit">펼치기</button>
     </form>
   </header>
 
   <main class="reader-shell">
-    <aside class="sidebar" aria-label="성경 선택">
-      <div class="sidebar-card">
-        <p class="eyebrow">Bible Reader</p>
-        <h1>성경책을 넘기듯 읽어보세요.</h1>
-        <p>책, 장, 절을 고르거나 검색창에 원하는 구절을 입력하면 자동으로 펼쳐집니다.</p>
-      </div>
+    <aside class="sidebar" aria-label="성경 선택과 안내">
+      <section class="intro-card">
+        <p class="eyebrow">A Shared Scripture Journal</p>
+        <h1>말씀을 읽고, 마음의 흔적을 남깁니다.</h1>
+        <p>
+          이곳은 성경을 빠르게 소비하는 곳이 아니라, 한 절 앞에 잠시 머물고
+          각자의 묵상과 질문, 기도를 조심스럽게 기록하는 공간입니다.
+        </p>
+      </section>
 
-      <div class="control-group">
-        <label for="book-select">성경</label>
-        <select id="book-select"></select>
-      </div>
-      <div class="control-row">
+      <section class="controls-card" aria-label="장절 이동">
         <div class="control-group">
-          <label for="chapter-select">장</label>
-          <select id="chapter-select"></select>
+          <label for="book-select">성경</label>
+          <select id="book-select"></select>
         </div>
-        <div class="control-group">
-          <label for="verse-select">절</label>
-          <select id="verse-select"></select>
+        <div class="control-row">
+          <div class="control-group">
+            <label for="chapter-select">장</label>
+            <select id="chapter-select"></select>
+          </div>
+          <div class="control-group">
+            <label for="verse-select">절</label>
+            <select id="verse-select"></select>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div class="quick-links" aria-label="빠른 이동">
-        <button type="button" data-ref="창세기 1:1">창 1:1</button>
-        <button type="button" data-ref="시편 23:1">시 23</button>
-        <button type="button" data-ref="요한복음 3:16">요 3:16</button>
-        <button type="button" data-ref="로마서 8:28">롬 8:28</button>
-      </div>
+      <section class="quick-card" aria-label="빠른 이동">
+        <h2>자주 펼치는 말씀</h2>
+        <div class="quick-links">
+          <button type="button" data-ref="창세기 1:1">창세기 1:1</button>
+          <button type="button" data-ref="시편 23:1">시편 23편</button>
+          <button type="button" data-ref="요한복음 3:16">요한복음 3:16</button>
+          <button type="button" data-ref="로마서 8:28">로마서 8:28</button>
+        </div>
+      </section>
 
       <p class="data-note">
-        현재는 데모용 일부 본문만 포함되어 있습니다. 합법적으로 사용 가능한 성경 번역 JSON을 연결하면 전체 성경 리더로 확장됩니다.
+        현재 본문은 프로토타입 확인을 위한 일부 샘플입니다. 실제 서비스에서는 사용 허가를 받은 성경 번역 데이터와 서버 저장소를 연결합니다.
       </p>
     </aside>
 
     <section class="book-stage" aria-live="polite">
       <div class="book-toolbar">
         <button id="prev-button" class="nav-button" type="button" aria-label="이전 장">← 이전 장</button>
-        <div>
+        <div class="chapter-heading">
           <p id="current-book" class="current-book">-</p>
           <h2 id="current-title">-</h2>
+          <p class="chapter-subtitle">절을 클릭하면 이 말씀에 남겨진 묵상들을 볼 수 있습니다.</p>
         </div>
         <button id="next-button" class="nav-button" type="button" aria-label="다음 장">다음 장 →</button>
       </div>
@@ -72,13 +84,13 @@
         <button id="page-left" class="page-turn left" type="button" aria-label="이전 장으로 넘기기"></button>
         <div class="page page-left">
           <div class="page-inner">
-            <p class="page-label">Bible</p>
+            <p class="page-label">Scripture</p>
             <div id="left-page-content" class="verses"></div>
           </div>
         </div>
         <div class="page page-right">
           <div class="page-inner">
-            <p class="page-label">Together</p>
+            <p class="page-label">Reflections</p>
             <div id="right-page-content" class="verses"></div>
           </div>
         </div>
@@ -88,6 +100,31 @@
       <div id="message" class="message" role="status"></div>
     </section>
   </main>
+
+  <dialog id="comment-dialog" class="comment-dialog" aria-labelledby="dialog-title">
+    <div class="dialog-header">
+      <div>
+        <p id="dialog-reference" class="dialog-reference">-</p>
+        <h2 id="dialog-title">이 절에 남겨진 묵상</h2>
+      </div>
+      <button id="dialog-close" class="icon-button" type="button" aria-label="닫기">×</button>
+    </div>
+    <blockquote id="dialog-verse" class="dialog-verse"></blockquote>
+    <section class="comment-list-wrap">
+      <div class="comment-list-title">
+        <h3>함께 남긴 기록</h3>
+        <span id="dialog-count">0개</span>
+      </div>
+      <div id="comment-list" class="comment-list"></div>
+    </section>
+    <form id="comment-form" class="comment-form">
+      <label for="comment-author">이름 또는 별명 <span>비워두면 익명 묵상자로 표시됩니다.</span></label>
+      <input id="comment-author" maxlength="24" placeholder="예: 하늘길, 익명 가능" />
+      <label for="comment-body">묵상 남기기</label>
+      <textarea id="comment-body" rows="5" required placeholder="이 말씀 앞에서 머문 생각, 질문, 기도, 삶의 적용을 조심스럽게 남겨보세요."></textarea>
+      <button type="submit">묵상 저장</button>
+    </form>
+  </dialog>
 
   <script src="script.js"></script>
 </body>
