@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="말씀을 읽고 절마다 익명 묵상을 나누는 성경 커뮤니티" />
+  <meta name="description" content="성경 절마다 익명 묵상과 감정 이모지를 남기고 마음의 상태에 맞는 말씀을 추천받는 묵상 공간" />
   <title>Bible Journaling Together</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -11,107 +11,164 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="ambient-glow" aria-hidden="true"></div>
+
   <header class="app-header">
     <a class="brand" href="#" aria-label="Bible Journaling Together 홈">
-      <span class="brand-seal">BJT</span>
-      <span><strong>Bible Journaling Together</strong><small>함께 읽고, 나누고, 기록합니다</small></span>
+      <span class="brand-icon">✦</span>
+      <span>
+        <strong>Bible Journaling Together</strong>
+        <small>말씀을 읽고, 나누고, 회복합니다</small>
+      </span>
     </a>
+
+    <nav class="top-nav" aria-label="상단 메뉴">
+      <a class="is-active" href="#reader">성경읽기</a>
+      <a href="#insightPanel">감정지도</a>
+      <a href="#recommendPanel">추천말씀</a>
+      <a href="#commentPanel">묵상나눔</a>
+    </nav>
+
     <form class="search-form" id="searchForm">
       <label class="sr-only" for="searchInput">구절 검색</label>
-      <input id="searchInput" type="search" placeholder="구절이나 단어를 검색하세요" />
-      <button type="submit">검색</button>
+      <input id="searchInput" type="search" placeholder="구절, 감정, 키워드 검색" />
+      <button type="submit" aria-label="검색">⌕</button>
     </form>
   </header>
 
-  <main class="reader-shell">
-    <aside class="sidebar">
-      <section class="intro-card">
-        <p class="eyebrow">Quiet Scripture Room</p>
-        <h1>말씀 앞에<br />잠시 머무는 시간</h1>
-        <p>한 절씩 천천히 읽고, 같은 말씀 앞에 머문 사람들의 마음을 함께 만나보세요.</p>
-      </section>
-
-      <section class="controls-card">
-        <div class="control-group">
-          <label for="bookSelect">성경</label>
-          <select id="bookSelect"><option value="genesis">창세기</option></select>
-        </div>
-        <div class="control-row">
-          <div class="control-group">
-            <label for="chapterSelect">장</label>
-            <select id="chapterSelect"><option value="1">1장</option></select>
-          </div>
-          <div class="control-group">
-            <label for="fontSizeSelect">글자 크기</label>
-            <select id="fontSizeSelect">
-              <option value="normal">보통</option>
-              <option value="large">크게</option>
-              <option value="xlarge">아주 크게</option>
-            </select>
-          </div>
-        </div>
-      </section>
-
-      <section class="quick-card">
-        <h2>빠른 이동</h2>
-        <div class="quick-links">
-          <button type="button" data-verse="gen-1-1">1절</button>
-          <button type="button" data-verse="gen-1-3">3절</button>
-          <button type="button" data-verse="gen-1-8">8절</button>
-          <button type="button" data-verse="gen-1-10">10절</button>
-        </div>
-      </section>
-      <p class="data-note">절을 누르면 그 절의 익명 묵상과 댓글이 열립니다.</p>
-    </aside>
-
-    <section class="book-stage" aria-label="성경 읽기">
-      <div class="book-toolbar">
-        <button class="nav-button" type="button" id="prevChapter">← 이전 장</button>
-        <div class="chapter-heading">
-          <p class="current-book">Genesis</p>
-          <h2>창세기 1장</h2>
-          <p class="chapter-subtitle">태초의 빛과 창조의 질서</p>
-        </div>
-        <button class="nav-button" type="button" id="nextChapter">다음 장 →</button>
+  <main class="reader-layout" id="reader">
+    <section class="vision-card">
+      <p class="eyebrow">Digital Contemplation Space</p>
+      <h1>느리게 머무르는<br />성경 묵상 공간</h1>
+      <p>
+        한 절이 하나의 방이 됩니다. 익명으로 마음을 남기고,
+        누군가의 묵상과 감정 표현을 통해 말씀 안에서 다시 회복합니다.
+      </p>
+      <div class="vision-stats">
+        <span><strong id="statComments">0</strong> 묵상</span>
+        <span><strong id="statReactions">0</strong> 감정</span>
+        <span><strong id="statSelected">1절</strong> 선택</span>
       </div>
-
-      <div class="book" id="book">
-        <article class="page page-left">
-          <div class="page-inner">
-            <p class="page-label">창세기 · 첫째 날</p>
-            <div class="verses" id="leftVerses"></div>
-          </div>
-        </article>
-        <article class="page page-right">
-          <div class="page-inner">
-            <p class="page-label">창세기 · 둘째 날</p>
-            <div class="verses" id="rightVerses"></div>
-          </div>
-        </article>
-      </div>
-      <p class="message" id="message" aria-live="polite"></p>
     </section>
+
+    <section class="reader-stage" aria-label="성경 리더">
+      <div class="reader-toolbar">
+        <div class="select-wrap">
+          <label for="bookSelect">성경</label>
+          <select id="bookSelect">
+            <option value="genesis">창세기</option>
+          </select>
+        </div>
+
+        <button class="page-control" type="button" id="prevChapter" aria-label="이전 장">‹</button>
+
+        <div class="chapter-title">
+          <p>Genesis</p>
+          <h2>창세기 1장</h2>
+          <small>태초의 빛과 창조의 질서</small>
+        </div>
+
+        <button class="page-control" type="button" id="nextChapter" aria-label="다음 장">›</button>
+
+        <div class="select-wrap compact">
+          <label for="fontSizeSelect">글꼴</label>
+          <select id="fontSizeSelect">
+            <option value="normal">보통</option>
+            <option value="large">크게</option>
+            <option value="xlarge">아주 크게</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="book-shell">
+        <div class="book-cover" aria-hidden="true"></div>
+        <article class="book">
+          <section class="page page-left">
+            <div class="page-inner">
+              <p class="page-kicker">창세기 · 첫째 날</p>
+              <h3>창세기 1장</h3>
+              <div class="verses" id="leftVerses"></div>
+              <p class="page-number">2</p>
+            </div>
+          </section>
+
+          <section class="page page-right">
+            <div class="page-curl" aria-hidden="true"></div>
+            <div class="page-inner">
+              <p class="page-kicker">창세기 · 둘째 날</p>
+              <div class="verses" id="rightVerses"></div>
+              <p class="page-number">3</p>
+            </div>
+          </section>
+        </article>
+      </div>
+
+      <p class="system-message" id="message" aria-live="polite"></p>
+    </section>
+
+    <aside class="reflection-panel" id="commentPanel" aria-label="절별 묵상 패널">
+      <div class="panel-tabs">
+        <button class="is-active" type="button">코멘트</button>
+        <button type="button" id="bookmarkButton">북마크</button>
+      </div>
+
+      <section class="selected-verse-card">
+        <p class="eyebrow" id="selectedReference">창세기 1장 1절</p>
+        <blockquote id="selectedVerseText">태초에 하나님이 천지를 창조하시니라</blockquote>
+        <div class="emotion-row" id="emotionRow" aria-label="절 감정 표현"></div>
+      </section>
+
+      <section class="insight-card" id="insightPanel">
+        <div class="section-title">
+          <h3>이 절의 감정 흐름</h3>
+          <span id="topEmotionLabel">아직 조용해요</span>
+        </div>
+        <div class="emotion-bars" id="emotionBars"></div>
+      </section>
+
+      <section class="recommend-card" id="recommendPanel">
+        <div class="section-title">
+          <h3>함께 마음이 닿은 말씀</h3>
+          <span>추천</span>
+        </div>
+        <div class="recommend-list" id="recommendList"></div>
+      </section>
+
+      <section class="comments-card">
+        <div class="section-title">
+          <h3>묵상 나눔</h3>
+          <span id="commentTotal">0</span>
+        </div>
+        <div class="comment-list" id="commentList"></div>
+      </section>
+
+      <form class="comment-form" id="commentForm">
+        <label for="moodSelect">지금 마음</label>
+        <select id="moodSelect">
+          <option value="위로">위로가 필요해요</option>
+          <option value="감사">감사해요</option>
+          <option value="믿음">굳센 믿음이 필요해요</option>
+          <option value="평안">평안을 느껴요</option>
+          <option value="회복">회복되고 싶어요</option>
+        </select>
+
+        <label for="commentInput">나의 묵상</label>
+        <textarea id="commentInput" rows="4" maxlength="1000" placeholder="이 절을 읽으며 떠오른 마음과 깨달음을 남겨보세요." required></textarea>
+
+        <div class="form-footer">
+          <span id="anonymousBadge">익명으로 작성</span>
+          <button type="submit">등록</button>
+        </div>
+      </form>
+    </aside>
   </main>
 
-  <dialog class="comment-dialog" id="commentDialog">
-    <div class="dialog-header">
-      <div>
-        <p class="dialog-reference" id="dialogReference">창세기 1장 1절</p>
-        <h2>이 절에 머문 마음들</h2>
-      </div>
-      <button class="icon-button" id="closeDialog" type="button" aria-label="닫기">×</button>
-    </div>
-    <p class="dialog-verse" id="dialogVerse"></p>
-    <div class="comment-list-wrap">
-      <div class="comment-list-title"><h3>익명 묵상</h3><span id="commentTotal">0</span></div>
-      <div class="comment-list" id="commentList"></div>
-    </div>
-    <form class="comment-form" id="commentForm">
-      <label for="commentInput">나의 묵상<span>로그인 없이 익명으로 저장됩니다.</span></label>
-      <textarea id="commentInput" rows="4" maxlength="1000" placeholder="이 절을 읽으며 떠오른 마음과 깨달음을 남겨보세요." required></textarea>
-      <button type="submit">묵상 남기기</button>
-    </form>
-  </dialog>
+  <section class="bottom-dock" aria-label="빠른 묵상 이동">
+    <button type="button" data-verse="gen-1-1">오늘의 시작</button>
+    <button type="button" data-verse="gen-1-3">빛이 필요한 마음</button>
+    <button type="button" data-verse="gen-1-8">평안의 하늘</button>
+    <button type="button" data-verse="gen-1-10">좋았더라</button>
+  </section>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="script.js"></script>
