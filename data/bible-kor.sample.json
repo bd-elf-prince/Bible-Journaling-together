@@ -1,0 +1,20 @@
+[
+  {
+    "key": "gen",
+    "name": "창세기",
+    "english": "Genesis",
+    "startPage": 3,
+    "chapters": [
+      {
+        "number": 1,
+        "subtitle": "태초의 빛과 창조의 질서",
+        "pageLeft": "창세기 · 첫째 날",
+        "pageRight": "창세기 · 좋았더라",
+        "verses": [
+          [1, "권리 확인된 성경 본문을 여기에 넣습니다."],
+          [2, "각 절은 [절번호, 본문] 형태로 넣습니다."]
+        ]
+      }
+    ]
+  }
+]
