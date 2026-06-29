@@ -5,11 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="성경 절마다 익명 묵상 댓글과 감정 이모지를 남기고, 마음의 반응으로 말씀을 추천받는 조용한 묵상 성경 리더" />
   <title>Bible Journaling Together</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&family=Noto+Serif+KR:wght@400;600;700;900&display=swap" rel="stylesheet" />
+
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="v4-reader.css" />
 </head>
+
 <body>
   <div class="ambient ambient-left"></div>
   <div class="ambient ambient-right"></div>
@@ -109,7 +113,9 @@
           <p class="eyebrow" id="selectedReference">창세기 1장 1절</p>
           <button type="button" id="copyVerseButton">구절 복사</button>
         </div>
+
         <blockquote id="selectedVerseText">태초에 하나님이 천지를 창조하시니라</blockquote>
+
         <div class="emotion-row" id="emotionRow"></div>
       </section>
 
@@ -160,7 +166,9 @@
             <option value="회복">회복되고 싶어요</option>
           </select>
         </div>
+
         <textarea id="commentInput" rows="4" maxlength="1000" placeholder="이 절을 읽으며 떠오른 마음과 깨달음을 남겨보세요." required></textarea>
+
         <div class="form-footer">
           <span id="anonymousBadge">익명으로 작성</span>
           <button type="submit">등록</button>
@@ -173,5 +181,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="script.js"></script>
+  <script src="v4-reader.js"></script>
 </body>
 </html>
