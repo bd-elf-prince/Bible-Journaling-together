@@ -17,7 +17,19 @@ Do not add a full copyrighted Bible text until the project has permission to use
 node tools/normalize-bible-data.mjs source-bible.json data/bible-kor.json
 ```
 
-3. Commit `data/bible-kor.json` after confirming the translation can be used.
+3. Validate the converted file:
+
+```bash
+node tools/validate-bible-data.mjs data/bible-kor.json
+```
+
+4. For a final 66-book Bible file, run the stricter check:
+
+```bash
+node tools/validate-bible-data.mjs data/bible-kor.json --strict
+```
+
+5. Commit `data/bible-kor.json` after confirming the translation can be used.
 
 A tiny non-runtime example is available here:
 
