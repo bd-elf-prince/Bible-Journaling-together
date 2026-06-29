@@ -1,4 +1,1 @@
-<!DOCTYPE html>
-<html lang="ko">
-<body>Bible Journaling Together</body>
-</html>
+<script src="script.js"></script>
