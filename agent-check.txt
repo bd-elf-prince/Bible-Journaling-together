@@ -1,1 +1,1 @@
-const url = "https://example.com";
+const key = "sb_publishable_placeholder";
