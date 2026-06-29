@@ -1,1 +1,4 @@
-temporary check
+<!DOCTYPE html>
+<html lang="ko">
+<body>Bible Journaling Together</body>
+</html>
