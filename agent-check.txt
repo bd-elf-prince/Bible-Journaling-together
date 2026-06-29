@@ -1,2 +1,1 @@
-<form id="searchForm"><input id="searchInput" type="search" /><button type="submit">검색</button></form>
-<script src="script.js"></script>
+♧ ◔ ⌕ ≪ ‹ › ≫
