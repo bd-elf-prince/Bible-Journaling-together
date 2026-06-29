@@ -1,3 +1,2 @@
-const supabaseUrl = "https://rayvvlerwxumqvmodvsy.supabase.co";
-const supabaseKey = "sb_publishable_k6jRijBWjC4hcEO--pEHEg_zYI7KGUZ";
-const db = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
+<form id="searchForm"><input id="searchInput" type="search" /><button type="submit">검색</button></form>
+<script src="script.js"></script>
