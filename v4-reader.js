@@ -14,6 +14,26 @@
       [8,"하나님이 궁창을 하늘이라 부르시니라 저녁이 되고 아침이 되니 이는 둘째 날이니라"],
       [9,"하나님이 이르시되 천하의 물이 한 곳으로 모이고 뭍이 드러나라 하시니 그대로 되니라"],
       [10,"하나님이 뭍을 땅이라 부르시고 모인 물을 바다라 부르시니 하나님이 보시기에 좋았더라"],
+      [11,"하나님이 이르시되 땅은 풀과 씨 맺는 채소와 각기 종류대로 씨 가진 열매 맺는 나무를 내라 하시니 그대로 되어"],
+      [12,"땅이 풀과 각기 종류대로 씨 맺는 채소와 각기 종류대로 씨 가진 열매 맺는 나무를 내니 하나님이 보시기에 좋았더라"],
+      [13,"저녁이 되고 아침이 되니 이는 셋째 날이니라"],
+      [14,"하나님이 이르시되 하늘의 궁창에 광명체들이 있어 낮과 밤을 나뉘게 하고 그것들로 징조와 계절과 날과 해를 이루게 하라"],
+      [15,"또 광명체들이 하늘의 궁창에 있어 땅을 비추라 하시니 그대로 되니라"],
+      [16,"하나님이 두 큰 광명체를 만드사 큰 광명체로 낮을 주관하게 하시고 작은 광명체로 밤을 주관하게 하시며 또 별들을 만드시고"],
+      [17,"하나님이 그것들을 하늘의 궁창에 두어 땅을 비추게 하시며"],
+      [18,"낮과 밤을 주관하게 하시고 빛과 어둠을 나뉘게 하시니 하나님이 보시기에 좋았더라"],
+      [19,"저녁이 되고 아침이 되니 이는 넷째 날이니라"],
+      [20,"하나님이 이르시되 물들은 생물을 번성하게 하라 땅 위 하늘의 궁창에는 새가 날으라 하시고"],
+      [21,"하나님이 큰 바다 짐승들과 물에서 번성하여 움직이는 모든 생물을 그 종류대로, 날개 있는 모든 새를 그 종류대로 창조하시니 하나님이 보시기에 좋았더라"],
+      [22,"하나님이 그들에게 복을 주시며 이르시되 생육하고 번성하여 여러 바닷물에 충만하라 새들도 땅에 번성하라 하시니라"],
+      [23,"저녁이 되고 아침이 되니 이는 다섯째 날이니라"],
+      [24,"하나님이 이르시되 땅은 생물을 그 종류대로 내되 가축과 기는 것과 땅의 짐승을 종류대로 내라 하시니 그대로 되니라"],
+      [25,"하나님이 땅의 짐승을 그 종류대로, 가축을 그 종류대로, 땅에 기는 모든 것을 그 종류대로 만드시니 하나님이 보시기에 좋았더라"],
+      [26,"하나님이 이르시되 우리의 형상을 따라 우리의 모양대로 우리가 사람을 만들고 그들로 바다의 물고기와 하늘의 새와 가축과 온 땅과 땅에 기는 모든 것을 다스리게 하자 하시고"],
+      [27,"하나님이 자기 형상 곧 하나님의 형상대로 사람을 창조하시되 남자와 여자를 창조하시고"],
+      [28,"하나님이 그들에게 복을 주시며 이르시되 생육하고 번성하여 땅에 충만하라 땅을 정복하라 바다의 물고기와 하늘의 새와 땅에 움직이는 모든 생물을 다스리라 하시니라"],
+      [29,"하나님이 이르시되 내가 온 지면의 씨 맺는 모든 채소와 씨 가진 열매 맺는 모든 나무를 너희에게 주노니 너희의 먹을거리가 되리라"],
+      [30,"또 땅의 모든 짐승과 하늘의 모든 새와 생명이 있어 땅에 기는 모든 것에게는 모든 푸른 풀을 먹을거리로 주노라 하시니 그대로 되니라"],
       [31,"하나님이 지으신 모든 것을 보시니 보시기에 심히 좋았더라 저녁이 되고 아침이 되니 이는 여섯째 날이니라"]
     ]}]},
     { key:"ps", name:"시편", english:"Psalms", chapters:[{ number:23, subtitle:"목자 되신 주님의 평안", pageLeft:"시편 · 푸른 풀밭", pageRight:"시편 · 잔이 넘치나이다", startPage:621, verses:[
@@ -132,7 +152,7 @@
     capture($("nextChapter"), "click", () => moveChapter(1));
     capture($("copyVerseButton"), "click", copyVerse);
     capture($("searchForm"), "submit", searchVerse);
-    capture($("fontSizeSelect"), "change", event => { const sizes = {normal:"1.03rem", large:"1.18rem", xlarge:"1.32rem"}; document.querySelectorAll(".verses").forEach(node => node.style.fontSize = sizes[event.target.value] || sizes.normal); });
+    capture($("fontSizeSelect"), "change", event => { const sizes = {normal:".93rem", large:"1.05rem", xlarge:"1.16rem"}; document.querySelectorAll(".verses").forEach(node => node.style.fontSize = sizes[event.target.value] || sizes.normal); });
     document.addEventListener("click", event => {
       const first = event.target.closest("[data-v4-first]"); const prev = event.target.closest("[data-v4-prev]"); const next = event.target.closest("[data-v4-next]"); const last = event.target.closest("[data-v4-last]"); const listen = event.target.closest("[data-v4-listen]");
       if(first){ stop(event); state.bookIndex = 0; state.chapterIndex = 0; openPopular(); }
@@ -206,7 +226,7 @@
     if(document.getElementById("v4-runtime-polish")) return;
     const style = document.createElement("style");
     style.id = "v4-runtime-polish";
-    style.textContent = `body.v4-reader-ready .v4-panel-tabs{display:flex;gap:8px;height:42px;align-items:center;padding:0 14px;border-bottom:1px solid rgba(181,141,88,.27);background:rgba(255,247,235,.42)}body.v4-reader-ready .v4-panel-tabs button{border:0;border-radius:999px;background:transparent;color:#85633f;padding:7px 12px;font-size:.82rem;font-weight:900;cursor:pointer}body.v4-reader-ready .v4-panel-tabs button.is-active{background:#ead3ae;color:#704c20;box-shadow:inset 1px 1px 3px rgba(85,50,16,.14),inset -1px -1px 2px rgba(255,255,255,.45)}body.v4-reader-ready .reflection-panel::before{display:none!important}body.v4-reader-ready .comment-form textarea:disabled{opacity:.62;cursor:not-allowed;background:#f4dfbf}body.v4-reader-ready .form-footer button:disabled{opacity:.55;cursor:not-allowed;background:#b79468}body.v4-reader-ready .comment-count{transition:transform .15s ease,box-shadow .15s ease}body.v4-reader-ready .verse-row:hover .comment-count{transform:translateY(1px);box-shadow:inset 3px 4px 7px rgba(74,43,14,.24),inset -2px -2px 4px rgba(255,255,255,.48)}body.v4-reader-ready .comment-item.is-popular{position:relative}body.v4-reader-ready .comment-item.is-popular::before{content:"인기";position:absolute;right:10px;top:10px;border-radius:999px;background:#ead3ae;color:#704c20;padding:2px 7px;font-size:.65rem;font-weight:900}`;
+    style.textContent = `body.v4-reader-ready .app-header{height:46px!important;padding-top:3px!important;padding-bottom:3px!important}body.v4-reader-ready .app-shell{height:calc(100vh - 46px)!important;padding-top:5px!important;padding-bottom:7px!important}body.v4-reader-ready .reader-stage{position:relative!important}body.v4-reader-ready .reader-toolbar{flex-basis:34px!important;margin-bottom:4px!important}body.v4-reader-ready .book-frame{padding-top:9px!important;padding-bottom:12px!important}body.v4-reader-ready .reader-footbar{position:absolute!important;left:18%!important;bottom:7px!important;z-index:20!important;height:25px!important}body.v4-reader-ready .system-message{position:absolute!important;left:0!important;right:0!important;bottom:34px!important;z-index:21!important}body.v4-reader-ready .page-inner{padding-top:20px!important;padding-bottom:40px!important}body.v4-reader-ready .verses{gap:3px!important;line-height:1.38!important;font-size:clamp(.70rem,.74vw,.90rem)!important}body.v4-reader-ready .v4-page-title{font-size:1.38rem!important;margin-bottom:0!important}body.v4-reader-ready .v4-page-ornament{margin-bottom:8px!important}body.v4-reader-ready .v4-panel-tabs{display:flex;gap:8px;height:42px;align-items:center;padding:0 14px;border-bottom:1px solid rgba(181,141,88,.27);background:rgba(255,247,235,.42)}body.v4-reader-ready .v4-panel-tabs button{border:0;border-radius:999px;background:transparent;color:#85633f;padding:7px 12px;font-size:.82rem;font-weight:900;cursor:pointer}body.v4-reader-ready .v4-panel-tabs button.is-active{background:#ead3ae;color:#704c20;box-shadow:inset 1px 1px 3px rgba(85,50,16,.14),inset -1px -1px 2px rgba(255,255,255,.45)}body.v4-reader-ready .reflection-panel::before{display:none!important}body.v4-reader-ready .comment-form textarea:disabled{opacity:.62;cursor:not-allowed;background:#f4dfbf}body.v4-reader-ready .form-footer button:disabled{opacity:.55;cursor:not-allowed;background:#b79468}body.v4-reader-ready .comment-count{transition:transform .15s ease,box-shadow .15s ease}body.v4-reader-ready .verse-row:hover .comment-count{transform:translateY(1px);box-shadow:inset 3px 4px 7px rgba(74,43,14,.24),inset -2px -2px 4px rgba(255,255,255,.48)}body.v4-reader-ready .comment-item.is-popular{position:relative}body.v4-reader-ready .comment-item.is-popular::before{content:"인기";position:absolute;right:10px;top:10px;border-radius:999px;background:#ead3ae;color:#704c20;padding:2px 7px;font-size:.65rem;font-weight:900}`;
     document.head.appendChild(style);
   }
 
