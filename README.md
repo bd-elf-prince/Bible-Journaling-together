@@ -6,3 +6,4 @@ Small parts first.
 Existing files first.
 Use simple words.
 Paste pieces if needed.
+No new files first.
