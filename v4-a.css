@@ -1,1 +1,8 @@
-html body.v4-reader-ready .app-shell{gap:38px!important}
+html body.v4-reader-ready .app-header{height:56px!important;padding:5px 24px!important;grid-template-columns:minmax(252px,340px) minmax(260px,1fr) minmax(250px,350px)!important;gap:14px!important;overflow:hidden!important}
+html body.v4-reader-ready .brand strong{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html body.v4-reader-ready .brand small{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html body.v4-reader-ready .top-nav{gap:clamp(18px,3.4vw,58px)!important;overflow:hidden!important}
+html body.v4-reader-ready .top-nav a{white-space:nowrap!important;line-height:1!important;font-size:.88rem!important}
+html body.v4-reader-ready .search-form{width:min(100%,300px)!important}
+html body.v4-reader-ready .app-shell{grid-template-columns:minmax(760px,1fr) 360px!important;gap:38px!important;width:min(1790px,calc(100vw - 42px))!important;height:calc(100vh - 56px)!important;padding:8px 0 12px!important}
+html body.v4-reader-ready .reader-toolbar{flex-basis:40px!important;margin-bottom:7px!important}
