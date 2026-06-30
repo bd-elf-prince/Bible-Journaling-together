@@ -151,6 +151,11 @@ create policy "public insert own comment reactions"
   on public.comment_reactions for insert
   with check (reaction_type = 'heart');
 
+drop policy if exists "public read reports for insert return" on public.comment_reports;
+create policy "public read reports for insert return"
+  on public.comment_reports for select
+  using (true);
+
 drop policy if exists "public insert reports" on public.comment_reports;
 create policy "public insert reports"
   on public.comment_reports for insert
