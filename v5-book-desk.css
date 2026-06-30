@@ -1,0 +1,147 @@
+/* V5 book-desk homepage overlay.
+   This layer moves the reader toward the final open-Bible / exchange-diary mockup. */
+:root{
+  --bjt-ink:#2d2117;
+  --bjt-muted:#8b7258;
+  --bjt-gold:#9b6423;
+  --bjt-paper:#f5e5c7;
+  --bjt-paper-light:#fff7e7;
+  --bjt-panel:#f3dfc3;
+  --bjt-line:rgba(129,89,43,.18);
+  --bjt-shadow:rgba(48,24,7,.28);
+}
+
+body.v5-reader-ready{
+  overflow:hidden;
+  color:var(--bjt-ink);
+  background:
+    radial-gradient(circle at 22% 0%, rgba(255,252,244,.92), transparent 34rem),
+    linear-gradient(180deg,#efe2cf 0%,#ead7bd 69%,#6a4528 69%,#2b160b 100%);
+}
+
+.app-header{
+  height:86px;
+  grid-template-columns:430px minmax(420px,1fr) 410px;
+  padding:14px 28px;
+  border-bottom:1px solid rgba(118,80,42,.16);
+  background:rgba(248,238,222,.94);
+}
+.brand-mark{
+  width:58px!important;
+  height:58px!important;
+  flex-basis:58px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.brand-mark:before{content:"📖"!important;inset:auto!important;left:0!important;top:0!important;width:auto!important;height:auto!important;border:0!important;color:#9a7445!important;font-size:2.35rem!important;transform:none!important;}
+.brand-mark:after{display:none!important;}
+.brand strong{max-width:340px;font-size:1.52rem;letter-spacing:-.02em;}
+.brand small{font-size:.82rem;}
+.top-nav{gap:clamp(34px,4vw,78px);}
+.top-nav a{font-size:1.02rem;font-weight:800;}
+.search-form{height:48px;width:330px;background:rgba(255,248,237,.72);}
+.search-form button{font-size:0;color:transparent;}
+.search-form button:before{content:"⌕";font-size:1.35rem;color:#4e3e2d;}
+
+.app-shell{
+  grid-template-columns:minmax(900px,1fr) 394px;
+  gap:28px;
+  width:min(1800px,calc(100vw - 32px));
+  height:calc(100vh - 86px);
+  padding:16px 0 18px;
+}
+.reader-toolbar{
+  flex-basis:48px;
+  grid-template-columns:280px 42px 118px 42px minmax(320px,1fr);
+  gap:10px;
+  margin-bottom:10px;
+}
+.reader-toolbar .chapter-title{grid-column:5;text-align:center;}
+.selector-stack{grid-column:1;grid-row:1;grid-template-columns:1fr!important;}
+.selector-stack select{height:42px;border-radius:14px;font-size:1rem;background:rgba(255,247,235,.64);}
+#chapterSelect{position:absolute;left:356px;top:0;width:92px;}
+#fontSizeSelect{display:none!important;}
+#prevChapter{grid-column:2;}
+#nextChapter{grid-column:4;}
+.chapter-title span,.chapter-title p{display:none!important;}
+.chapter-title h2{font-size:0;}
+.chapter-title h2:before{content:"책갈피   메모   하이라이트   기타 글꼴";font-family:"Noto Sans KR",system-ui,sans-serif;font-size:1rem;font-weight:800;color:#5b4a38;word-spacing:18px;}
+
+.book-frame{
+  padding:0 18px 30px;
+  border-radius:20px 20px 8px 8px;
+  background:
+    linear-gradient(90deg,rgba(255,232,174,.16),transparent 12%,transparent 88%,rgba(255,232,174,.14)),
+    linear-gradient(145deg,#140904,#291409 30%,#3d2211 60%,#6f4827 100%);
+  box-shadow:0 38px 76px rgba(30,13,4,.38), inset 0 0 0 7px rgba(20,9,3,.45), inset 0 0 0 1px rgba(236,178,83,.25);
+}
+.book-frame:before,.book-frame:after{top:22px;bottom:42px;width:50px;}
+.book{height:calc(100% - 0px);border-radius:16px;}
+.page-inner{padding:62px 54px 56px;background-size:100% 1.72rem;}
+.page-right .page-inner{padding-left:62px;padding-right:64px;}
+.page-kicker{font-family:"Noto Serif KR",serif;font-size:2.35rem;font-weight:700;letter-spacing:-.04em;color:#2e2117;text-align:center;margin:0 0 44px;}
+#pageLeftTitle:after{content:"";display:block;width:280px;height:18px;margin:14px auto 0;background:linear-gradient(90deg,transparent,#b8945d,transparent);opacity:.55;}
+#pageRightTitle{visibility:hidden;}
+.verses{gap:14px;font-size:1.04rem;line-height:1.78;background:none;}
+.verse-row{grid-template-columns:32px minmax(0,1fr) 52px!important;padding:3px 6px;border-radius:9px;}
+.verse-text{letter-spacing:-.01em;}
+.reader-footbar{position:absolute;left:0;right:390px;bottom:0;display:flex;justify-content:center;gap:8px;z-index:20;pointer-events:none;}
+.reader-footbar button,.reader-footbar span{pointer-events:auto;height:42px;padding:0 24px;border:1px solid rgba(255,244,222,.58);border-radius:999px;background:rgba(74,45,23,.54);color:#fff5dd;font-weight:800;backdrop-filter:blur(6px);}
+.reader-footbar span{display:inline-flex;align-items:center;min-width:150px;justify-content:center;}
+.system-message{bottom:50px;color:#fff3d8;text-shadow:0 1px 5px rgba(0,0,0,.38);}
+
+.reflection-panel{
+  margin-top:54px;
+  height:calc(100% - 54px);
+  padding:0;
+  gap:0;
+  border-radius:18px 18px 0 0;
+  overflow:hidden;
+  background:linear-gradient(180deg,rgba(246,230,204,.97),rgba(237,215,184,.97));
+  box-shadow:0 18px 42px rgba(56,31,11,.22), inset 0 1px 0 rgba(255,255,255,.45);
+}
+.v5-panel-tabs{display:grid!important;grid-template-columns:1fr 1fr;gap:0;padding:0;background:rgba(220,198,169,.56);}
+.v5-panel-tabs button{height:58px;border:0;border-radius:0;background:transparent;color:#9a8065;font-size:1rem;font-weight:900;}
+.v5-panel-tabs button.is-active{position:relative;color:#99621f;background:rgba(255,248,236,.48);}
+.v5-panel-tabs button.is-active:after{content:"";position:absolute;left:26px;right:26px;bottom:0;height:2px;background:#a36a23;border-radius:999px;}
+.selected-verse-card{margin:14px 16px 0;padding:10px 12px;border-radius:11px;background:rgba(255,249,239,.48);}
+.selected-head{gap:8px;}
+.selected-head .eyebrow{font-size:.86rem;color:#6d5237;letter-spacing:0;}
+#copyVerseButton{display:none;}
+.selected-verse-card blockquote,.selected-verse-card .emotion-row{display:none!important;}
+.insight-card,.recommend-card,.profile-card{display:none!important;}
+.comments-card{order:3;margin:12px 16px 0;padding:0;border:0;background:transparent;}
+.comments-card .section-title{display:none;}
+.comment-list{gap:10px;}
+.comment-item{padding:16px 16px 14px;border:1px solid rgba(133,93,47,.16);border-radius:14px;background:rgba(255,249,239,.62);box-shadow:0 8px 18px rgba(74,43,18,.05);}
+.comment-item:before{display:none!important;}
+.comment-meta{font-size:.82rem;}
+.comment-avatar{width:30px;height:30px;background:linear-gradient(145deg,#d7a85a,#94601f);}
+.comment-author{font-weight:900;color:#4d3928;}
+.comment-mood{display:none;}
+.comment-body{font-family:"Noto Sans KR",system-ui,sans-serif!important;margin:12px 0 12px;font-size:.92rem;line-height:1.62;}
+.comment-body:before,.comment-body:after{display:none!important;content:""!important;}
+.comment-actions button{color:#9d8062;font-size:.8rem;}
+.comment-form{order:4;margin:auto 16px 16px;padding:12px;border-radius:12px;background:rgba(255,249,239,.55);}
+.comment-form .form-row{display:none;}
+.comment-form textarea{min-height:44px!important;max-height:92px;border-radius:8px;background:rgba(255,252,247,.82);font-size:.86rem;resize:none;}
+.form-footer{margin-top:8px;}
+#anonymousBadge{color:#7c603f;font-size:.82rem;}
+.form-footer button{height:38px;min-width:84px;border-radius:9px;background:#9a6423;color:#fff8e8;}
+
+@media(max-width:1180px){
+  body.v5-reader-ready{overflow:auto;}
+  .app-header{height:auto;grid-template-columns:1fr;}
+  .app-shell{height:auto;grid-template-columns:1fr;width:min(100%,calc(100vw - 18px));}
+  .reader-toolbar{grid-template-columns:38px 1fr 38px;}
+  .reader-toolbar .chapter-title{grid-column:2;}
+  .selector-stack{grid-column:1/-1;grid-row:2;}
+  #chapterSelect{position:static;width:100%;}
+  .book-frame{min-height:620px;padding:12px;}
+  .page-inner{padding:40px 26px 56px;}
+  .page-kicker{font-size:1.8rem;}
+  .reflection-panel{margin-top:0;height:auto;max-height:none;}
+  .reader-footbar{position:static;right:auto;margin-top:10px;}
+}
