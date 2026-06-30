@@ -12,6 +12,7 @@
 
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="v4-reader.css" />
+  <link rel="stylesheet" href="v4-photo-match.css" />
 </head>
 
 <body>
@@ -20,23 +21,31 @@
 
   <header class="app-header">
     <a class="brand" href="#reader" aria-label="Bible Journaling Together 홈">
-      <span class="brand-mark">✦</span>
+      <span class="brand-mark" aria-hidden="true">✦</span>
       <span>
         <strong>Bible Journaling Together</strong>
-        <small>읽고 · 머물고 · 함께 회복하는 말씀</small>
+        <small>함께 말씀을 읽고, 나누고, 기록합니다</small>
       </span>
     </a>
 
     <nav class="top-nav" aria-label="주요 영역 이동">
       <a href="#reader" class="is-active">성경읽기</a>
-      <a href="#commentPanel">묵상나눔</a>
-      <a href="#recommendPanel">추천말씀</a>
+      <a href="#commentPanel">저널</a>
+      <a href="#commentPanel">커뮤니티</a>
+      <a href="#commentPanel">나의 노트</a>
+      <a href="#commentPanel">설정</a>
     </nav>
 
     <form class="search-form" id="searchForm" role="search">
-      <input id="searchInput" type="search" placeholder="구절, 감정, 키워드 검색" autocomplete="off" />
-      <button type="submit">검색</button>
+      <input id="searchInput" type="search" placeholder="구절, 키워드 검색" autocomplete="off" />
+      <button type="submit" aria-label="검색">검색</button>
     </form>
+
+    <div class="header-actions" aria-label="상단 도구">
+      <button class="notification-button" type="button" aria-label="알림">♧</button>
+      <button class="profile-button" type="button" aria-label="프로필"><span aria-hidden="true">♣</span></button>
+      <button class="chevron-button" type="button" aria-label="메뉴 열기">⌄</button>
+    </div>
   </header>
 
   <main class="app-shell" id="reader">
@@ -83,6 +92,14 @@
             <option value="xlarge">글자 아주 크게</option>
           </select>
         </div>
+
+        <div class="reader-actions" aria-label="읽기 도구">
+          <button type="button"><span aria-hidden="true">♧</span>책갈피</button>
+          <button type="button"><span aria-hidden="true">▱</span>메모</button>
+          <button type="button"><span aria-hidden="true">╱</span>하이라이트</button>
+          <button type="button"><span aria-hidden="true">가</span>글꼴</button>
+          <button class="reader-settings" type="button" aria-label="읽기 설정">⚙</button>
+        </div>
       </div>
 
       <div class="book-frame">
@@ -110,8 +127,8 @@
     <aside class="reflection-panel" id="commentPanel" aria-label="절별 묵상과 추천">
       <section class="selected-verse-card">
         <div class="selected-head">
-          <p class="eyebrow" id="selectedReference">창세기 1장 1절</p>
-          <button type="button" id="copyVerseButton">구절 복사</button>
+          <p class="eyebrow" id="selectedReference">창세기 1장 6절</p>
+          <button type="button" id="copyVerseButton">최신순⌄</button>
         </div>
 
         <blockquote id="selectedVerseText">태초에 하나님이 천지를 창조하시니라</blockquote>
@@ -167,7 +184,7 @@
           </select>
         </div>
 
-        <textarea id="commentInput" rows="4" maxlength="1000" placeholder="이 절을 읽으며 떠오른 마음과 깨달음을 남겨보세요." required></textarea>
+        <textarea id="commentInput" rows="4" maxlength="1000" placeholder="이 절에 대한 코멘트를 남겨보세요" required></textarea>
 
         <div class="form-footer">
           <span id="anonymousBadge">익명으로 작성</span>
@@ -182,5 +199,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="script.js"></script>
   <script src="v4-reader.js"></script>
+  <script src="v4-photo-match.js"></script>
 </body>
 </html>
