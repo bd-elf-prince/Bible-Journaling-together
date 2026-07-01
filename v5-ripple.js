@@ -12,14 +12,14 @@
     placeholder('#searchInput','구절이나 남겨진 마음 찾기');
     const nav=$$('.top-nav a');
     ['성경읽기','교환일기','물결','이어지는 말씀','설정'].forEach((label,i)=>{ if(nav[i]) nav[i].textContent=label; });
-    text('.insight-card .section-title h3','이 절 아래 이어진 물방울');
+    text('.insight-card .section-title h3','조용한 반응 표시');
     text('.recommend-card .section-title h3','이 글을 읽고 함께 펼쳐볼 말씀');
     text('.comments-card .section-title h3','교환일기');
     text('.profile-card .section-title h3','익명 이름');
     text('#copyVerseButton','구절 담기');
-    const top=$('#topEmotionLabel'); if(top) top.textContent='집계보다 마음을 먼저 봅니다';
-    const rec=$('#recommendMoodLabel'); if(rec) rec.textContent='이어짐';
-    const label=$('#commentForm label[for="moodSelect"]'); if(label) label.textContent='내 마음 표시';
+    const top=$('#topEmotionLabel'); if(top) top.textContent='댓글보다 앞에 서지 않는 작은 표시';
+    const rec=$('#recommendMoodLabel'); if(rec) rec.textContent='이어읽기';
+    const label=$('#commentForm label[for="moodSelect"]'); if(label) label.textContent='이 한 줄의 온도';
     placeholder('#commentInput','내 작은 한 줄이 누군가에게 파도처럼 닿을 수 있어요. 오늘 이 절 앞에서 깨달은 마음을 남겨주세요.');
     const submit=$('#commentForm button[type="submit"]'); if(submit) submit.textContent='한 줄 남기기';
     const empty=$('.comment-empty'); if(empty) empty.textContent='아직 이 절 아래에는 남겨진 한 줄이 없습니다. 첫 물방울을 남겨주세요.';
@@ -39,7 +39,7 @@
     style.id='v5-ripple-style';
     style.textContent=`
       body.v5-reader-ready .insight-card{display:none!important;}
-      body.v5-reader-ready .emotion-row{opacity:.72;margin-top:6px;}
+      body.v5-reader-ready .emotion-row{opacity:.58;margin-top:6px;}
       body.v5-reader-ready .emotion-pill{font-size:.68rem;padding:5px 8px;background:rgba(255,248,235,.48);}
       body.v5-reader-ready .emotion-pill b{font-size:.62rem;}
       body.v5-reader-ready .comments-card{order:3;background:linear-gradient(180deg,rgba(255,252,246,.75),rgba(247,232,207,.58));}
@@ -53,7 +53,7 @@
       body.v5-reader-ready .comment-body:after{content:'”';color:#b98638;font-size:1.25em;}
       body.v5-reader-ready .comments-card .section-title:after{content:'누군가의 한 줄이 다음 사람의 깨달음으로 이어집니다';display:block;color:#8a735b;font-size:.72rem;font-weight:800;line-height:1.45;}
       body.v5-reader-ready .comment-form textarea{min-height:105px;line-height:1.58;}
-      body.v5-reader-ready .recommend-list:before{content:'감정별 분류가 아니라, 남겨진 마음을 읽고 나서 같이 펼쳐볼 말씀입니다.';display:block;margin-bottom:4px;color:#8a735b;font-size:.73rem;line-height:1.45;}
+      body.v5-reader-ready .recommend-list:before{content:'남겨진 한 줄을 읽고 나서 같이 펼쳐볼 말씀입니다.';display:block;margin-bottom:4px;color:#8a735b;font-size:.73rem;line-height:1.45;}
     `;
     document.head.appendChild(style);
   }

@@ -1,4 +1,4 @@
--- Bible Journaling Together V5 reactions and recommendations schema.
+-- Bible Journaling Together V5 quiet verse marks and comment hearts schema.
 -- Run this after supabase/comments-mvp.sql.
 
 create extension if not exists pgcrypto;

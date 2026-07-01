@@ -1,12 +1,13 @@
 # Bible data drop zone
 
-`v4-reader.js` looks for this runtime file:
+`v5-reader.js` looks for this runtime file:
 
 ```text
 data/bible-kor.json
 ```
 
-Do not add a full copyrighted Bible text until the project has permission to use that translation.
+The current runtime file is a full 66-book JSON and should stay in this single file unless loading performance becomes a measured problem.
+Do not replace it with copyrighted Bible text until the project has permission to use that translation.
 
 ## Quick start
 

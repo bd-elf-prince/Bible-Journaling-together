@@ -1,4 +1,4 @@
-// Bible Journaling Together V5: verse comments, emotion reactions, and recommendation reader.
+// Bible Journaling Together V5: verse comments, quiet reactions, and companion reading.
 (()=>{
   'use strict';
 
@@ -238,7 +238,7 @@
     if(!document.querySelector('.v5-panel-tabs')){
       const tabs = document.createElement('div');
       tabs.className = 'v5-panel-tabs';
-      tabs.innerHTML = '<button class="is-active" type="button">묵상</button><button type="button" data-jump-recommend>추천</button><button type="button" data-jump-profile>익명</button>';
+      tabs.innerHTML = '<button class="is-active" type="button">교환일기</button><button type="button" data-jump-recommend>이어읽기</button><button type="button" data-jump-profile>익명</button>';
       document.querySelector('#commentPanel')?.prepend(tabs);
     }
     const copy = el.copyVerseButton || $('copyVerseButton');
@@ -295,8 +295,7 @@
   function renderVerseRow(verse){
     const selected = state.selected?.id === verse.id ? ' is-selected' : '';
     const count = state.commentCounts.get(verse.id) || 0;
-    const reactions = state.verseReactions.filter(row => row.verse_id === verse.id).length;
-    return `<button class="verse-row${selected}" type="button" data-verse-id="${verse.id}"><span class="verse-number">${verse.number}</span><span class="verse-text">${escapeHtml(verse.text)}</span><span class="comment-count ${count || reactions ? 'has-comments' : 'is-empty'}">${count ? count : reactions ? '✦'+reactions : ''}</span></button>`;
+    return `<button class="verse-row${selected}" type="button" data-verse-id="${verse.id}"><span class="verse-number">${verse.number}</span><span class="verse-text">${escapeHtml(verse.text)}</span><span class="comment-count ${count ? 'has-comments' : 'is-empty'}">${count ? count : ''}</span></button>`;
   }
   function renderPanel(){
     const selected = state.selected || currentChapter().verses[0];
@@ -304,7 +303,7 @@
     if(el.selectedReference) el.selectedReference.textContent = `${selected.bookName} ${selected.chapter}장 ${selected.number}절`;
     if(el.selectedVerseText) el.selectedVerseText.textContent = selected.text;
     if(el.commentTotal) el.commentTotal.textContent = String(rows.length);
-    if(el.commentList) el.commentList.innerHTML = rows.length ? rows.map(renderCommentCard).join('') : `<p class="comment-empty">아직 이 절에는 묵상이 없습니다. 첫 마음을 조용히 남겨보세요.</p>`;
+    if(el.commentList) el.commentList.innerHTML = rows.length ? rows.map(renderCommentCard).join('') : `<p class="comment-empty">아직 이 절 아래에는 남겨진 한 줄이 없습니다. 첫 물방울을 남겨주세요.</p>`;
     renderEmotionRow(selected);
     renderEmotionBars(selected);
     renderRecommendations(selected);
@@ -323,26 +322,25 @@
     const counts = EMOTIONS.map(item => ({...item, count:state.verseReactions.filter(row => row.verse_id === selected.id && row.reaction_type === item.key).length}));
     const max = Math.max(1, ...counts.map(item => item.count));
     const top = counts.slice().sort((a,b)=>b.count-a.count)[0];
-    if(el.topEmotionLabel) el.topEmotionLabel.textContent = top.count ? `${top.label} ${top.count}` : '아직 조용해요';
+    if(el.topEmotionLabel) el.topEmotionLabel.textContent = top.count ? `조용한 표시 ${top.count}` : '아직 조용해요';
     el.emotionBars.innerHTML = counts.map(item => `<div class="emotion-bar"><span>${item.icon} ${item.label}</span><i><b style="width:${Math.round(item.count/max*100)}%"></b></i><strong>${item.count}</strong></div>`).join('');
   }
   function renderRecommendations(selected, forcedMood){
     if(!el.recommendList) return;
     const mood = forcedMood || dominantMood(selected) || '위로';
-    if(el.recommendMoodLabel) el.recommendMoodLabel.textContent = mood;
+    if(el.recommendMoodLabel) el.recommendMoodLabel.textContent = '이어읽기';
     const ids = smartRecommendationIds(selected, mood);
-    el.recommendList.innerHTML = ids.map(id => findVerse(id)).filter(Boolean).slice(0,5).map(verse => `<button class="recommend-item" type="button" data-open-verse="${verse.id}"><span>${verse.bookName} ${verse.chapter}:${verse.number}</span><strong>${escapeHtml(verse.text)}</strong></button>`).join('') || '<p class="comment-empty">추천할 말씀이 아직 없습니다.</p>';
+    el.recommendList.innerHTML = ids.map(id => findVerse(id)).filter(Boolean).slice(0,5).map(verse => `<button class="recommend-item" type="button" data-open-verse="${verse.id}"><span>같이 펼쳐볼 말씀 · ${verse.bookName} ${verse.chapter}:${verse.number}</span><strong>${escapeHtml(verse.text)}</strong></button>`).join('') || '<p class="comment-empty">같이 펼쳐볼 말씀이 아직 없습니다.</p>';
   }
   function dominantMood(selected){
-    const top = EMOTIONS.map(item => ({...item, count:state.verseReactions.filter(row => row.verse_id === selected.id && row.reaction_type === item.key).length})).sort((a,b)=>b.count-a.count)[0];
-    return top?.count ? top.mood : (state.comments.find(comment => comment.verse_id === selected.id)?.mood || null);
+    return state.comments.find(comment => comment.verse_id === selected.id)?.mood || null;
   }
   function smartRecommendationIds(selected, mood){
     const coReactors = new Set(state.verseReactions.filter(row => row.verse_id === selected.id).map(row => row.anonymous_id));
     const coIds = [...countBy(state.verseReactions.filter(row => coReactors.has(row.anonymous_id) && row.verse_id !== selected.id), 'verse_id').entries()].sort((a,b)=>b[1]-a[1]).map(([id])=>id);
     const moodIds = MOOD_RECOMMENDATIONS[mood] || [];
     const context = currentChapter().verses.filter(verse => verse.id !== selected.id).slice(0,4).map(verse => verse.id);
-    return [...new Set([...coIds, ...moodIds, ...context])].filter(id => id !== selected.id);
+    return [...new Set([...context, ...coIds, ...moodIds])].filter(id => id !== selected.id);
   }
   function renderCommentCard(comment){
     const hearts = state.commentReactions.filter(row => row.comment_id === comment.id).length;
@@ -381,15 +379,15 @@
   async function reactToVerse(type){
     if(!state.selected) return;
     const localKey = `${state.selected.id}:${type}`;
-    if(state.reactedVerses.has(localKey)){ setMessage('이미 이 감정으로 반응했어요.'); return; }
+    if(state.reactedVerses.has(localKey)){ setMessage('이미 이 표시를 남겼어요.'); return; }
     if(!db || !state.reactionTableReady){
       state.reactedVerses.add(localKey); saveJson(STORAGE_REACTED_VERSES, [...state.reactedVerses]);
       state.verseReactions.unshift({id:localKey, verse_id:state.selected.id, anonymous_id:anonymousId(), reaction_type:type, created_at:new Date().toISOString()});
-      render(); setMessage('로컬에 감정 반응을 남겼습니다. Supabase verse_reactions SQL 실행 후 서버 저장됩니다.'); return;
+      render(); setMessage('로컬에 조용한 표시를 남겼습니다. Supabase verse_reactions SQL 실행 후 서버 저장됩니다.'); return;
     }
     const result = await db.from('verse_reactions').insert({verse_id:state.selected.id, anonymous_id:anonymousId(), reaction_type:type}).select('id, verse_id, anonymous_id, reaction_type, created_at').single();
-    if(result.error){ state.reactionTableReady = false; setMessage('verse_reactions 테이블 확인 필요. 일단 로컬 반응으로 표시합니다.'); state.reactedVerses.add(localKey); saveJson(STORAGE_REACTED_VERSES, [...state.reactedVerses]); render(); return; }
-    state.verseReactions.unshift(result.data); state.reactedVerses.add(localKey); saveJson(STORAGE_REACTED_VERSES, [...state.reactedVerses]); render(); setMessage('이 절에 감정 반응을 남겼습니다.');
+    if(result.error){ state.reactionTableReady = false; setMessage('verse_reactions 테이블 확인 필요. 일단 로컬 표시로 남깁니다.'); state.reactedVerses.add(localKey); saveJson(STORAGE_REACTED_VERSES, [...state.reactedVerses]); render(); return; }
+    state.verseReactions.unshift(result.data); state.reactedVerses.add(localKey); saveJson(STORAGE_REACTED_VERSES, [...state.reactedVerses]); render(); setMessage('이 절에 조용한 표시를 남겼습니다.');
   }
   async function submitComment(){
     if(!db){ setMessage('Supabase 연결 후 묵상을 남길 수 있어요.'); return; }
