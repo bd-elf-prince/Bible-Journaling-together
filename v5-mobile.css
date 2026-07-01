@@ -1,0 +1,337 @@
+/* Mobile layout repair for Bible Journaling Together.
+   Phones use a single-page reader so the desktop book spine never covers text. */
+@media (max-width: 760px){
+  body.v5-reader-ready{
+    overflow:auto!important;
+    background:linear-gradient(180deg,#f3e5d0 0%,#ead0aa 62%,#f6ead8 100%)!important;
+  }
+
+  body.v5-reader-ready .app-header{
+    position:relative!important;
+    height:auto!important;
+    grid-template-columns:1fr!important;
+    gap:12px!important;
+    padding:16px 16px 14px!important;
+    overflow:visible!important;
+  }
+  body.v5-reader-ready .brand{
+    gap:12px!important;
+    align-items:center!important;
+  }
+  body.v5-reader-ready .brand-mark{
+    width:46px!important;
+    height:46px!important;
+    flex-basis:46px!important;
+  }
+  body.v5-reader-ready .brand strong{
+    max-width:calc(100vw - 96px)!important;
+    white-space:normal!important;
+    font-size:1.18rem!important;
+    line-height:1.15!important;
+  }
+  body.v5-reader-ready .brand small{
+    white-space:normal!important;
+    font-size:.78rem!important;
+    line-height:1.35!important;
+  }
+  body.v5-reader-ready .top-nav,
+  body.v5-reader-ready .header-actions{
+    display:none!important;
+  }
+  body.v5-reader-ready .search-form{
+    justify-self:stretch!important;
+    width:100%!important;
+    height:50px!important;
+    margin-top:4px!important;
+    padding:0 16px!important;
+    border-radius:999px!important;
+  }
+  body.v5-reader-ready .search-form input,
+  body.v5-reader-ready .search-form button{
+    font-size:.94rem!important;
+  }
+
+  body.v5-reader-ready .app-shell{
+    display:block!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    padding:14px 12px 36px!important;
+    overflow:visible!important;
+  }
+  body.v5-reader-ready .reader-stage{
+    display:block!important;
+    min-height:0!important;
+    overflow:visible!important;
+  }
+  body.v5-reader-ready .reader-toolbar{
+    display:grid!important;
+    grid-template-columns:44px minmax(0,1fr) 44px!important;
+    grid-template-rows:auto auto!important;
+    gap:12px 8px!important;
+    align-items:center!important;
+    flex-basis:auto!important;
+    margin:0 0 14px!important;
+  }
+  body.v5-reader-ready #prevChapter{
+    grid-column:1!important;
+    grid-row:1!important;
+  }
+  body.v5-reader-ready #nextChapter{
+    grid-column:3!important;
+    grid-row:1!important;
+  }
+  body.v5-reader-ready .round-control{
+    width:44px!important;
+    height:44px!important;
+    font-size:1.75rem!important;
+    background:rgba(255,248,236,.84)!important;
+  }
+  body.v5-reader-ready .reader-toolbar .chapter-title{
+    grid-column:2!important;
+    grid-row:1!important;
+    text-align:center!important;
+  }
+  body.v5-reader-ready .chapter-title span{
+    display:block!important;
+    color:#9e6e32!important;
+    font-size:.72rem!important;
+    letter-spacing:.12em!important;
+  }
+  body.v5-reader-ready .chapter-title h2{
+    display:block!important;
+    margin:2px 0 0!important;
+    color:#2e2117!important;
+    font-size:1.38rem!important;
+    line-height:1.18!important;
+    white-space:normal!important;
+  }
+  body.v5-reader-ready .chapter-title h2:before{
+    display:none!important;
+    content:""!important;
+  }
+  body.v5-reader-ready .chapter-title p{
+    display:none!important;
+  }
+  body.v5-reader-ready .selector-stack{
+    grid-column:1 / -1!important;
+    grid-row:2!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 94px!important;
+    gap:8px!important;
+  }
+  body.v5-reader-ready .selector-stack select{
+    width:100%!important;
+    height:48px!important;
+    min-width:0!important;
+    padding:0 14px!important;
+    border-radius:18px!important;
+    background:rgba(255,248,236,.9)!important;
+    font-size:1rem!important;
+  }
+  body.v5-reader-ready #chapterSelect{
+    position:static!important;
+    left:auto!important;
+    top:auto!important;
+    width:100%!important;
+  }
+  body.v5-reader-ready #fontSizeSelect{
+    display:none!important;
+  }
+
+  body.v5-reader-ready .book-frame{
+    height:auto!important;
+    min-height:0!important;
+    padding:0!important;
+    border-radius:24px!important;
+    overflow:visible!important;
+    background:linear-gradient(180deg,#5b371c,#3a2110)!important;
+    box-shadow:0 14px 28px rgba(46,24,8,.22),inset 0 0 0 1px rgba(255,226,166,.18)!important;
+  }
+  body.v5-reader-ready .book-frame:before,
+  body.v5-reader-ready .book-frame:after,
+  body.v5-reader-ready .book:before{
+    display:none!important;
+    content:none!important;
+  }
+  body.v5-reader-ready .book{
+    display:block!important;
+    height:auto!important;
+    min-height:0!important;
+    overflow:hidden!important;
+    border-radius:24px!important;
+    background:transparent!important;
+    filter:none!important;
+  }
+  body.v5-reader-ready .page-right{
+    display:none!important;
+  }
+  body.v5-reader-ready .page-left{
+    display:block!important;
+    min-height:0!important;
+    border-radius:22px!important;
+    border:1px solid rgba(119,77,32,.22)!important;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.28),inset 0 18px 34px rgba(255,255,255,.18)!important;
+  }
+  body.v5-reader-ready .page-inner{
+    height:auto!important;
+    min-height:0!important;
+    overflow:visible!important;
+    padding:26px 16px 30px!important;
+    background-size:100% 2rem!important;
+  }
+  body.v5-reader-ready .page-kicker{
+    margin:0 0 16px!important;
+    color:#8b7457!important;
+    text-align:center!important;
+    font-size:.9rem!important;
+    line-height:1.3!important;
+    letter-spacing:.06em!important;
+  }
+  body.v5-reader-ready #pageLeftTitle:after{
+    display:none!important;
+    content:none!important;
+  }
+  body.v5-reader-ready .verses{
+    display:grid!important;
+    gap:6px!important;
+    font-size:1.04rem!important;
+    line-height:1.72!important;
+  }
+  body.v5-reader-ready .verse-row{
+    grid-template-columns:30px minmax(0,1fr) 38px!important;
+    gap:8px!important;
+    align-items:start!important;
+    padding:10px 6px!important;
+    border-radius:14px!important;
+  }
+  body.v5-reader-ready .verse-number{
+    padding-top:1px!important;
+    text-align:center!important;
+    font-size:.95rem!important;
+  }
+  body.v5-reader-ready .verse-text{
+    min-width:0!important;
+    word-break:keep-all!important;
+    overflow-wrap:anywhere!important;
+  }
+  body.v5-reader-ready .comment-count{
+    width:32px!important;
+    min-width:32px!important;
+    height:24px!important;
+    margin-top:2px!important;
+    transform:none!important;
+  }
+  body.v5-reader-ready .system-message{
+    position:static!important;
+    margin:8px 0 0!important;
+    color:#7a5527!important;
+    text-shadow:none!important;
+  }
+
+  body.v5-reader-ready .reader-footbar{
+    position:static!important;
+    right:auto!important;
+    bottom:auto!important;
+    display:grid!important;
+    grid-template-columns:1fr 1fr auto 1fr 1fr!important;
+    gap:5px!important;
+    margin:10px 0 0!important;
+    pointer-events:auto!important;
+  }
+  body.v5-reader-ready .reader-footbar button,
+  body.v5-reader-ready .reader-footbar span{
+    height:38px!important;
+    min-width:0!important;
+    padding:0 8px!important;
+    border:1px solid rgba(141,98,47,.18)!important;
+    border-radius:999px!important;
+    background:rgba(255,248,236,.8)!important;
+    color:#5b3d1d!important;
+    font-size:.84rem!important;
+    box-shadow:0 2px 8px rgba(70,40,14,.08)!important;
+  }
+  body.v5-reader-ready .reader-footbar span{
+    min-width:72px!important;
+  }
+
+  body.v5-reader-ready .reflection-panel{
+    height:auto!important;
+    max-height:none!important;
+    min-height:0!important;
+    margin:18px 0 0!important;
+    padding:14px!important;
+    overflow:visible!important;
+    border-radius:24px!important;
+    background:rgba(250,237,216,.96)!important;
+    box-shadow:0 12px 28px rgba(57,31,11,.12)!important;
+  }
+  body.v5-reader-ready .v5-panel-tabs{
+    display:grid!important;
+    grid-template-columns:repeat(auto-fit,minmax(90px,1fr))!important;
+    gap:8px!important;
+    padding:0!important;
+    background:transparent!important;
+  }
+  body.v5-reader-ready .v5-panel-tabs button{
+    height:44px!important;
+    border-radius:18px!important;
+    font-size:.95rem!important;
+  }
+  body.v5-reader-ready .selected-verse-card,
+  body.v5-reader-ready .comments-card,
+  body.v5-reader-ready .comment-form,
+  body.v5-reader-ready .recommend-card,
+  body.v5-reader-ready .profile-card,
+  body.v5-reader-ready .insight-card{
+    margin:12px 0 0!important;
+    padding:16px!important;
+    border-radius:18px!important;
+  }
+  body.v5-reader-ready .selected-verse-card blockquote{
+    display:block!important;
+    margin:14px 0 0!important;
+    font-size:1.08rem!important;
+    line-height:1.72!important;
+  }
+  body.v5-reader-ready .comments-card .section-title{
+    display:flex!important;
+  }
+  body.v5-reader-ready .comment-form{
+    margin-bottom:0!important;
+  }
+  body.v5-reader-ready .comment-form textarea{
+    min-height:88px!important;
+    font-size:1rem!important;
+    line-height:1.55!important;
+  }
+  body.v5-reader-ready .profile-form{
+    grid-template-columns:1fr!important;
+  }
+  body.v5-reader-ready .profile-form button,
+  body.v5-reader-ready .form-footer button{
+    height:42px!important;
+  }
+}
+
+@media (max-width: 390px){
+  body.v5-reader-ready .app-shell{
+    padding-left:8px!important;
+    padding-right:8px!important;
+  }
+  body.v5-reader-ready .selector-stack{
+    grid-template-columns:minmax(0,1fr) 86px!important;
+  }
+  body.v5-reader-ready .verses{
+    font-size:1rem!important;
+  }
+  body.v5-reader-ready .verse-row{
+    grid-template-columns:26px minmax(0,1fr) 34px!important;
+    gap:6px!important;
+  }
+  body.v5-reader-ready .reader-footbar button,
+  body.v5-reader-ready .reader-footbar span{
+    padding:0 6px!important;
+    font-size:.78rem!important;
+  }
+}
