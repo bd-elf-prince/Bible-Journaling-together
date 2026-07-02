@@ -381,6 +381,13 @@
     const ids = smartRecommendationIds(selected, dominantMood(selected) || '위로').slice(0,4);
     el.bottomDock.innerHTML = ids.map(id => findVerse(id)).filter(Boolean).map(verse => `<button type="button" data-open-verse="${verse.id}">${verse.bookName} ${verse.chapter}:${verse.number}</button>`).join('');
   }
+  function commentInsertErrorMessage(error){
+    const text = `${error?.code || ''} ${error?.message || ''}`.toLowerCase();
+    if(text.includes('42501') || text.includes('row-level security')){
+      return 'Supabase RLS 정책이 댓글 저장을 막고 있습니다. supabase/mvp-fix-comments-rls.sql을 실행해 주세요.';
+    }
+    return `저장 실패: ${error?.message || 'comments 스키마 확인'}`;
+  }
   function mvpCheck(){
     const selected = state.selected || currentChapter().verses[0];
     const commentsForSelected = state.comments.filter(comment => comment.verse_id === selected.id);
@@ -436,7 +443,7 @@
     if(MVP_DEBUG) console.log('[BJT MVP] comment insert payload', payload);
     const result = await db.from('comments').insert(payload).select('id, verse_id, user_name, content, created_at, anonymous_id, mood').single();
     button.disabled = false; button.textContent = '등록';
-    if(result.error){ console.error('[BJT MVP] comments insert failed', result.error); setMessage(`저장 실패: ${result.error.message || 'comments 스키마 확인'}`); return; }
+    if(result.error){ console.error('[BJT MVP] comments insert failed', result.error); setMessage(commentInsertErrorMessage(result.error)); return; }
     el.commentInput.value = ''; await loadServerData(); openVerse(result.data.verse_id); setMessage('묵상을 저장했습니다.');
   }
   async function reactToComment(commentId){

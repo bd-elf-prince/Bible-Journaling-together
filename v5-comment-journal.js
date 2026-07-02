@@ -33,6 +33,13 @@
   function allComments(){ return window.BJTReader?.state?.comments || []; }
   function verseComments(id){ return allComments().filter(comment => comment.verse_id === id); }
   function message(text){ const node = $('#message'); if(node) node.textContent = text || ''; }
+  function commentInsertErrorMessage(error){
+    const text = `${error?.code || ''} ${error?.message || ''}`.toLowerCase();
+    if(text.includes('42501') || text.includes('row-level security')){
+      return 'Supabase RLS 정책이 댓글 저장을 막고 있습니다. supabase/mvp-fix-comments-rls.sql을 실행해 주세요.';
+    }
+    return `Supabase 저장 실패: ${error?.message || 'comments insert 에러'}`;
+  }
 
   function patchLanguage(){
     document.body.classList.add('bjt-comment-first');
@@ -123,7 +130,7 @@
     if(!result.error) saved = result.data;
     else{
       console.error('[BJT MVP] comments insert failed', result.error);
-      message(`Supabase 저장 실패: ${result.error.message || 'comments insert 에러'}`);
+      message(commentInsertErrorMessage(result.error));
       if(button){ button.disabled = false; button.textContent = '물방울 남기기'; }
       return;
     }
