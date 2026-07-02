@@ -88,7 +88,19 @@ The Supabase registry for those 31,101 comment targets is:
 supabase/bible-verses-registry.sql
 ```
 
-Run it after the comments MVP SQL to create `public.bible_verses` and connect `comments.verse_id` to the full Bible verse id set.
+If Supabase SQL Editor says the query is too large, run the split files instead:
+
+```text
+supabase/bible-verses-registry-parts/00-setup.sql
+supabase/bible-verses-registry-parts/part-01.sql
+supabase/bible-verses-registry-parts/part-02.sql
+supabase/bible-verses-registry-parts/part-03.sql
+supabase/bible-verses-registry-parts/part-04.sql
+supabase/bible-verses-registry-parts/part-05.sql
+supabase/bible-verses-registry-parts/99-finalize.sql
+```
+
+Run the registry after the comments MVP SQL to create `public.bible_verses` and connect `comments.verse_id` to the full Bible verse id set.
 
 After the Supabase SQL is applied, verse-level storage can be checked with:
 
