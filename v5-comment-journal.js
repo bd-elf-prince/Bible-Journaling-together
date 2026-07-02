@@ -6,6 +6,7 @@
   const SUPABASE_URL = 'https://rayvvlerwxumqvmodvsy.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_k6jRijBWjC4hcEO--pEHEg_zYI7KGUZ';
   const LOCAL_COMMENTS = 'bjt-v5-local-comments';
+  const LOCAL_FALLBACK_ENABLED = false;
   const STORAGE_ID = 'bjt-v5-anonymous-id';
   const STORAGE_NAME = 'bjt-v5-anonymous-name';
 
@@ -71,6 +72,7 @@
   }
 
   function syncLocalIntoState(){
+    if(!LOCAL_FALLBACK_ENABLED) return;
     const state = window.BJTReader?.state;
     if(!state) return;
     const locals = loadJson(LOCAL_COMMENTS, []);
@@ -106,15 +108,32 @@
 
     if(button){ button.disabled = true; button.textContent = '종이에 스미는 중…'; }
     const payload = {verse_id:verse.id, user_name:anonymousName(), anonymous_id:anonymousId(), mood:select?.value || '묵상', content};
+    console.log('[BJT MVP] selectedVerse before submit', {id:verse.id, reference:`${verse.bookName} ${verse.chapter}:${verse.number}`});
+    console.log('[BJT MVP] comment insert payload', payload);
 
     let saved = null;
-    if(db){
-      const result = await db.from('comments').insert(payload).select('id, verse_id, user_name, content, created_at, anonymous_id, mood').single();
-      if(!result.error) saved = result.data;
-      else console.warn('comment insert failed; saving locally', result.error);
+    if(!db){
+      message('Supabase 연결 후 창세기 1:1 댓글 MVP를 확인할 수 있어요.');
+      console.error('[BJT MVP] Supabase client is not available');
+      if(button){ button.disabled = false; button.textContent = '물방울 남기기'; }
+      return;
+    }
+
+    const result = await db.from('comments').insert(payload).select('id, verse_id, user_name, content, created_at, anonymous_id, mood').single();
+    if(!result.error) saved = result.data;
+    else{
+      console.error('[BJT MVP] comments insert failed', result.error);
+      message(`Supabase 저장 실패: ${result.error.message || 'comments insert 에러'}`);
+      if(button){ button.disabled = false; button.textContent = '물방울 남기기'; }
+      return;
     }
 
     if(!saved){
+      if(!LOCAL_FALLBACK_ENABLED){
+        message('Supabase 저장이 확인되지 않아 댓글을 남기지 않았습니다.');
+        if(button){ button.disabled = false; button.textContent = '물방울 남기기'; }
+        return;
+      }
       saved = {...payload, id:`local-${Date.now()}-${Math.random().toString(16).slice(2)}`, created_at:new Date().toISOString(), local_only:true};
       const locals = loadJson(LOCAL_COMMENTS, []);
       locals.unshift(saved);

@@ -11,6 +11,7 @@
   const STORAGE_REACTED_VERSES = 'bjt-v5-reacted-verses';
   const STORAGE_LIKED_COMMENTS = 'bjt-v5-liked-comments';
   const STORAGE_FONT_SIZE = 'bjt-v5-font-size';
+  const MVP_DEBUG = true;
 
   const EMOTIONS = [
     {key:'like', label:'좋아요', icon:'♡', mood:'감사'},
@@ -160,7 +161,7 @@
     document.body.classList.add('v5-reader-ready');
     applyFontSize();
     ensureChrome();
-    state.selected = currentChapter().verses.find(verse => verse.number === 6) || currentChapter().verses[0];
+    state.selected = currentChapter().verses[0];
     bindEvents();
     render();
     await loadBibleData();
@@ -201,8 +202,9 @@
     const extended = `${base}, report_count, deleted_at`;
     let result = await db.from('comments').select(extended).is('deleted_at', null).order('created_at', {ascending:false});
     if(result.error) result = await db.from('comments').select(base).order('created_at', {ascending:false});
-    if(result.error){ state.commentsReady = false; console.warn('comments select failed', result.error); return []; }
+    if(result.error){ state.commentsReady = false; console.warn('[BJT MVP] comments select failed', result.error); return []; }
     state.commentsReady = true;
+    if(MVP_DEBUG) console.log('[BJT MVP] comments selected', {count:(result.data || []).length});
     return (result.data || []).filter(row => !row.deleted_at);
   }
   async function fetchVerseReactions(){
@@ -382,6 +384,7 @@
     state.bookIndex = state.bible.findIndex(book => book.key === verse.bookKey);
     state.chapterIndex = currentBook().chapters.findIndex(chapter => chapter.number === verse.chapter);
     state.selected = verse;
+    if(MVP_DEBUG) console.log('[BJT MVP] selectedVerse', {id:verse.id, reference:`${verse.bookName} ${verse.chapter}:${verse.number}`});
     render();
   }
   function moveChapter(step){
@@ -411,9 +414,10 @@
     const button = el.commentForm.querySelector('button[type="submit"]');
     button.disabled = true; button.textContent = '저장 중…';
     const payload = {verse_id:state.selected.id, user_name:anonymousName(), anonymous_id:anonymousId(), mood:el.moodSelect?.value || '묵상', content};
+    if(MVP_DEBUG) console.log('[BJT MVP] comment insert payload', payload);
     const result = await db.from('comments').insert(payload).select('id, verse_id, user_name, content, created_at, anonymous_id, mood').single();
     button.disabled = false; button.textContent = '등록';
-    if(result.error){ console.warn(result.error); setMessage(`저장 실패: ${result.error.message || 'comments 스키마 확인'}`); return; }
+    if(result.error){ console.error('[BJT MVP] comments insert failed', result.error); setMessage(`저장 실패: ${result.error.message || 'comments 스키마 확인'}`); return; }
     el.commentInput.value = ''; await loadServerData(); openVerse(result.data.verse_id); setMessage('묵상을 저장했습니다.');
   }
   async function reactToComment(commentId){
