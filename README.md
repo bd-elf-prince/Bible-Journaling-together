@@ -74,6 +74,22 @@ Local data can be checked with:
 node tools/check-mvp-data.mjs data/bible-kor.json
 ```
 
+All verse comment slots can be checked with:
+
+```bash
+node tools/check-all-verse-independence.mjs data/bible-kor.json
+```
+
+This proves the homepage has 31,101 independent verse ids, so every verse has its own comment target.
+
+The Supabase registry for those 31,101 comment targets is:
+
+```text
+supabase/bible-verses-registry.sql
+```
+
+Run it after the comments MVP SQL to create `public.bible_verses` and connect `comments.verse_id` to the full Bible verse id set.
+
 After the Supabase SQL is applied, verse-level storage can be checked with:
 
 ```bash
