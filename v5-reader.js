@@ -167,6 +167,8 @@
     await loadBibleData();
     await loadServerData();
     window.BJTReader = {state, render, openVerse, loadServerData, reactToVerse, reactToComment};
+    window.BJTMvpCheck = mvpCheck;
+    if(MVP_DEBUG) console.log('[BJT MVP] check ready: run window.BJTMvpCheck()');
   }
 
   async function loadBibleData(){
@@ -378,6 +380,23 @@
     const selected = state.selected || currentChapter().verses[0];
     const ids = smartRecommendationIds(selected, dominantMood(selected) || '위로').slice(0,4);
     el.bottomDock.innerHTML = ids.map(id => findVerse(id)).filter(Boolean).map(verse => `<button type="button" data-open-verse="${verse.id}">${verse.bookName} ${verse.chapter}:${verse.number}</button>`).join('');
+  }
+  function mvpCheck(){
+    const selected = state.selected || currentChapter().verses[0];
+    const commentsForSelected = state.comments.filter(comment => comment.verse_id === selected.id);
+    const result = {
+      selectedId:selected.id,
+      isGenesisOneOne:selected.id === 'gen-1-1',
+      reference:`${selected.bookName} ${selected.chapter}:${selected.number}`,
+      dbOnline:state.dbOnline,
+      commentsReady:state.commentsReady,
+      totalComments:state.comments.length,
+      commentsForSelected:commentsForSelected.length,
+      visibleCommentVerseIds:[...new Set(commentsForSelected.map(comment => comment.verse_id))],
+      expectedPayloadVerseId:selected.id
+    };
+    console.log('[BJT MVP] current check', result);
+    return result;
   }
   function openVerse(id){
     const verse = findVerse(id); if(!verse) return;
