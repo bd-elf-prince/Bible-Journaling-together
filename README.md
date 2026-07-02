@@ -52,6 +52,28 @@ Expected tables include:
 
 Comments should remain anonymous and attached to a verse, not to an emotion profile.
 
+## Genesis 1:1 MVP Check
+
+The first MVP is intentionally small:
+
+1. Open Genesis 1:1.
+2. Confirm the selected verse id is `gen-1-1`.
+3. Save one anonymous comment with `verse_id: "gen-1-1"`.
+4. Refresh the page.
+5. Confirm the comment is still visible on Genesis 1:1.
+6. Confirm the same comment is not visible on Genesis 1:2.
+
+Before testing comments, run the Supabase SQL in this order:
+
+1. `supabase/mvp-fix-comments-rls.sql`
+2. `supabase/mvp-check-comments.sql`
+
+Local data can be checked with:
+
+```bash
+node tools/check-mvp-data.mjs data/bible-kor.json
+```
+
 ## UX Principles
 
 Use this language:
