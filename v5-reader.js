@@ -10,6 +10,7 @@
   const STORAGE_NAME = 'bjt-v5-anonymous-name';
   const STORAGE_REACTED_VERSES = 'bjt-v5-reacted-verses';
   const STORAGE_LIKED_COMMENTS = 'bjt-v5-liked-comments';
+  const STORAGE_FONT_SIZE = 'bjt-v5-font-size';
 
   const EMOTIONS = [
     {key:'like', label:'좋아요', icon:'♡', mood:'감사'},
@@ -102,6 +103,7 @@
     bible: normalizeBible(FALLBACK_BIBLE), bookIndex:0, chapterIndex:0, selected:null,
     comments:[], verseReactions:[], commentReactions:[], commentCounts:new Map(),
     reactedVerses:new Set(loadJson(STORAGE_REACTED_VERSES, [])), likedComments:new Set(loadJson(STORAGE_LIKED_COMMENTS, [])),
+    fontSize:localStorage.getItem(STORAGE_FONT_SIZE) || 'normal',
     dbOnline:!!db, reactionTableReady:true, commentsReady:true
   };
 
@@ -154,8 +156,9 @@
   }
 
   async function init(){
-    ['leftVerses','rightVerses','selectedReference','selectedVerseText','commentList','commentTotal','commentForm','commentInput','moodSelect','message','bookSelect','chapterSelect','readerTitleEnglish','readerTitle','readerSubtitle','pageLeftTitle','pageRightTitle','anonymousBadge','copyVerseButton','emotionRow','emotionBars','topEmotionLabel','recommendMoodLabel','recommendList','bottomDock','statComments','statReactions','statSelected','nicknameInput','randomNameButton','saveNameButton','profileStatus'].forEach(id => el[id] = $(id));
+    ['leftVerses','rightVerses','selectedReference','selectedVerseText','commentList','commentTotal','commentForm','commentInput','moodSelect','message','bookSelect','chapterSelect','fontSizeSelect','readerTitleEnglish','readerTitle','readerSubtitle','pageLeftTitle','pageRightTitle','anonymousBadge','copyVerseButton','emotionRow','emotionBars','topEmotionLabel','recommendMoodLabel','recommendList','bottomDock','statComments','statReactions','statSelected','nicknameInput','randomNameButton','saveNameButton','profileStatus'].forEach(id => el[id] = $(id));
     document.body.classList.add('v5-reader-ready');
+    applyFontSize();
     ensureChrome();
     state.selected = currentChapter().verses.find(verse => verse.number === 6) || currentChapter().verses[0];
     bindEvents();
@@ -248,6 +251,7 @@
     capture(el.commentForm, 'submit', submitComment);
     capture(el.bookSelect, 'change', event => { state.bookIndex = Number(event.target.value); state.chapterIndex = 0; state.selected = currentChapter().verses[0]; render(); });
     capture(el.chapterSelect, 'change', event => { state.chapterIndex = Number(event.target.value); state.selected = currentChapter().verses[0]; render(); });
+    capture(el.fontSizeSelect, 'change', event => setFontSize(event.target.value));
     capture($('prevChapter'), 'click', () => moveChapter(-1));
     capture($('nextChapter'), 'click', () => moveChapter(1));
     capture(el.copyVerseButton, 'click', copyVerse);
@@ -275,6 +279,16 @@
   function renderSelectors(){
     if(el.bookSelect){ el.bookSelect.innerHTML = state.bible.map((book,index)=>`<option value="${index}">${book.name}</option>`).join(''); el.bookSelect.value = String(state.bookIndex); }
     if(el.chapterSelect){ el.chapterSelect.innerHTML = currentBook().chapters.map((chapter,index)=>`<option value="${index}">${chapter.number}장</option>`).join(''); el.chapterSelect.value = String(state.chapterIndex); }
+    if(el.fontSizeSelect) el.fontSizeSelect.value = state.fontSize;
+  }
+  function setFontSize(size){
+    state.fontSize = ['normal','large','xlarge'].includes(size) ? size : 'normal';
+    localStorage.setItem(STORAGE_FONT_SIZE, state.fontSize);
+    applyFontSize();
+  }
+  function applyFontSize(){
+    document.body.classList.remove('reader-font-normal','reader-font-large','reader-font-xlarge');
+    document.body.classList.add(`reader-font-${state.fontSize}`);
   }
   function renderHeader(){
     const book = currentBook(); const chapter = currentChapter();

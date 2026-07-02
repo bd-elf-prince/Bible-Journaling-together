@@ -117,7 +117,7 @@
     grid-column:1 / -1!important;
     grid-row:2!important;
     display:grid!important;
-    grid-template-columns:minmax(0,1fr) 94px!important;
+    grid-template-columns:minmax(0,1fr) 86px 104px!important;
     gap:8px!important;
   }
   body.v5-reader-ready .selector-stack select{
@@ -136,7 +136,7 @@
     width:100%!important;
   }
   body.v5-reader-ready #fontSizeSelect{
-    display:none!important;
+    display:block!important;
   }
 
   body.v5-reader-ready .book-frame{
@@ -197,6 +197,12 @@
     gap:6px!important;
     font-size:1.04rem!important;
     line-height:1.72!important;
+  }
+  body.reader-font-large .verses{
+    font-size:1.14rem!important;
+  }
+  body.reader-font-xlarge .verses{
+    font-size:1.24rem!important;
   }
   body.v5-reader-ready .verse-row{
     grid-template-columns:30px minmax(0,1fr) 38px!important;
@@ -320,7 +326,7 @@
     padding-right:8px!important;
   }
   body.v5-reader-ready .selector-stack{
-    grid-template-columns:minmax(0,1fr) 86px!important;
+    grid-template-columns:minmax(0,1fr) 76px 86px!important;
   }
   body.v5-reader-ready .verses{
     font-size:1rem!important;
