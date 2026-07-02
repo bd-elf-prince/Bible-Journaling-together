@@ -23,7 +23,7 @@
   document.addEventListener('DOMContentLoaded', init, {once:true});
 
   async function init(){
-    ['bookSelect','chapterSelect','prevChapter','nextChapter','firstChapter','lastChapter','prevSpread','nextSpread','leftVerses','rightVerses','chapterTitle','chapterSubtitle','leftPageNo','rightPageNo','progressText','statusText','selectedRef','selectedText','commentCount','commentList','commentForm','commentInput','anonymousCheck','searchForm','searchInput','copyVerseButton','togetherList'].forEach(id => els[id] = $(id));
+    ['bookSelect','chapterSelect','prevChapter','nextChapter','firstChapter','lastChapter','prevSpread','nextSpread','leftVerses','rightVerses','chapterTitle','chapterSubtitle','leftPageNo','rightPageNo','progressText','statusText','selectedRef','selectedText','commentCount','commentList','commentForm','commentInput','anonymousCheck','searchForm','searchInput','copyVerseButton','togetherList','commentToggle','panelClose','journal'].forEach(id => els[id] = $(id));
     bindEvents();
     await loadBible();
     render();
@@ -54,11 +54,15 @@
     els.commentForm.addEventListener('submit', submitComment);
     els.searchForm.addEventListener('submit', searchVerse);
     els.copyVerseButton.addEventListener('click', copySelected);
+    els.commentToggle?.addEventListener('click', openPanel);
+    els.panelClose?.addEventListener('click', closePanel);
     document.addEventListener('click', (event)=>{
       const verseButton = event.target.closest('[data-verse-id]');
       if(verseButton){
         event.preventDefault();
         openVerse(verseButton.dataset.verseId);
+        const bubble = event.target.closest('.verse-bubble');
+        if(bubble && Number(bubble.textContent.trim() || 0) > 0) openPanel();
         return;
       }
       const together = event.target.closest('[data-open-verse]');
@@ -194,7 +198,7 @@
   }
 
   function renderTogether(){
-    els.togetherList.innerHTML = RECOMMENDED_VERSES
+    els.togetherList.innerHTML = [...new Set(RECOMMENDED_VERSES)]
       .filter(id => id !== state.selected.id)
       .slice(0,4)
       .map(id => {
@@ -233,6 +237,7 @@
       els.commentInput.value = '';
       await loadComments();
       openVerse(result.data.verse_id);
+      openPanel();
       setStatus(`${state.selected.bookName} ${state.selected.chapter}:${state.selected.number}에 물방울을 남겼습니다.`);
     }catch(error){
       console.warn('[BJT MVP] comment save failed', error);
@@ -337,6 +342,8 @@
     return new Intl.DateTimeFormat('ko-KR', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}).format(date);
   }
   function setStatus(text){ els.statusText.textContent = text || ''; }
+  function openPanel(){ els.journal?.classList.add('is-open'); }
+  function closePanel(){ els.journal?.classList.remove('is-open'); }
   function withTimeout(promise, ms, label){
     let timer;
     const timeout = new Promise((_, reject)=>{
