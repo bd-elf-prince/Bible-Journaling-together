@@ -1,0 +1,124 @@
+:root{
+  --ink:#2f251b;
+  --muted:#8b7863;
+  --paper:#f6ecd9;
+  --paper-2:#fff7e9;
+  --line:#d9c6aa;
+  --gold:#9a6a2e;
+  --wood:#322013;
+  --shadow:0 24px 70px rgba(50,31,16,.22);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--ink);
+  font-family:"Noto Sans KR",system-ui,sans-serif;
+  background:
+    radial-gradient(circle at 18% 5%,rgba(255,255,255,.8),transparent 28rem),
+    linear-gradient(180deg,#f6ecdc 0%,#ead8bd 58%,#3a2618 100%);
+  overflow:hidden;
+}
+button,select,input,textarea{font:inherit}
+button,select{cursor:pointer}
+.topbar{
+  height:72px;
+  display:grid;
+  grid-template-columns:330px 1fr 360px;
+  align-items:center;
+  gap:20px;
+  padding:10px 32px;
+  border-bottom:1px solid rgba(113,78,39,.18);
+  background:rgba(251,244,232,.88);
+  backdrop-filter:blur(12px);
+}
+.brand{display:flex;align-items:center;gap:14px;color:inherit;text-decoration:none;min-width:0}
+.brand-icon{width:54px;height:42px;border:2px solid #b08245;border-radius:4px 4px 10px 10px;position:relative;background:#fff5df}
+.brand-icon:before,.brand-icon:after{content:"";position:absolute;top:-12px;width:24px;height:34px;border-radius:100% 0 100% 0;background:#b99863}
+.brand-icon:before{left:8px;transform:rotate(-28deg)}
+.brand-icon:after{right:8px;transform:rotate(28deg) scaleX(-1)}
+.brand strong{display:block;font-family:"Noto Serif KR",serif;font-size:1.35rem;white-space:nowrap}
+.brand small{display:block;color:#8b745b;font-size:.8rem}
+.main-nav{display:flex;justify-content:center;gap:48px}
+.main-nav a{position:relative;color:#4d4034;text-decoration:none;font-weight:800}
+.main-nav a.is-active:after{content:"";position:absolute;left:0;right:0;bottom:-14px;height:2px;background:var(--gold)}
+.search{justify-self:end;display:flex;align-items:center;width:100%;max-width:330px;height:44px;border:1px solid #d4bea0;border-radius:999px;background:#fff8ec;padding:0 10px 0 18px}
+.search input{flex:1;min-width:0;border:0;outline:0;background:transparent}
+.search button{width:34px;height:34px;border:0;border-radius:50%;background:transparent;font-size:1.2rem}
+.layout{height:calc(100vh - 72px);display:grid;grid-template-columns:minmax(700px,1fr) 420px;gap:26px;padding:16px 24px 18px}
+.reader-area{min-width:0;display:flex;flex-direction:column;gap:12px}
+.reader-controls{height:46px;display:grid;grid-template-columns:230px 42px 120px 42px 1fr;align-items:center;gap:10px}
+.reader-controls select,.reader-controls button,.bottom-controls button{
+  height:38px;border:1px solid rgba(143,103,58,.25);border-radius:12px;background:rgba(255,248,236,.78);color:#3f3124;font-weight:800;
+}
+.reader-controls select{padding:0 14px}
+.reader-tools{justify-self:end;display:flex;gap:10px}
+.reader-tools button{padding:0 14px}
+.book-frame{
+  flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:0;padding:18px 28px 28px;
+  border-radius:24px;background:linear-gradient(135deg,#2c160c,#72451f 50%,#241208);
+  box-shadow:var(--shadow),inset 0 0 0 8px rgba(255,217,137,.16);
+  position:relative;overflow:hidden;
+}
+.book-frame:before{content:"";position:absolute;left:50%;top:18px;bottom:28px;width:24px;transform:translateX(-50%);border-radius:30px;background:linear-gradient(90deg,rgba(49,23,7,.55),rgba(255,240,203,.62),rgba(49,23,7,.55));z-index:3;pointer-events:none}
+.book-page{
+  min-width:0;min-height:0;overflow:hidden;position:relative;padding:44px 56px 50px;background:
+    radial-gradient(circle at 24% 18%,rgba(255,255,255,.72),transparent 16rem),
+    linear-gradient(110deg,var(--paper-2),var(--paper));
+  border:1px solid rgba(121,84,43,.28);
+}
+.page-left{border-radius:18px 3px 3px 18px;box-shadow:inset -24px 0 42px rgba(113,77,38,.16)}
+.page-right{border-radius:3px 18px 18px 3px;box-shadow:inset 24px 0 42px rgba(113,77,38,.16)}
+.book-page header{text-align:center;margin-bottom:28px}
+.book-page h1{font-family:"Noto Serif KR",serif;font-size:2.15rem;margin:0 0 12px}
+.book-page p{margin:0;color:#9b815e;font-weight:800}
+.verses{display:grid;gap:8px;font-family:"Noto Serif KR",serif;font-size:clamp(.92rem,1.02vw,1.12rem);line-height:1.78}
+.verse-row{
+  width:100%;display:grid;grid-template-columns:34px minmax(0,1fr) 42px;gap:10px;align-items:start;
+  padding:7px 8px;border:1px solid transparent;border-radius:10px;background:transparent;color:inherit;text-align:left;
+}
+.verse-row:hover,.verse-row.is-selected{background:rgba(169,119,55,.13);border-color:rgba(154,106,46,.28)}
+.verse-no{color:#7c6548;font-family:"Noto Sans KR",sans-serif;font-weight:900}
+.verse-bubble{position:relative;justify-self:end;min-width:30px;height:24px;color:#6e583d;font-family:"Noto Sans KR",sans-serif;font-size:.74rem;font-weight:900;text-align:center;line-height:23px}
+.verse-bubble:before{content:"";position:absolute;inset:3px 4px 5px;border:1.5px solid rgba(89,66,43,.56);border-radius:8px 8px 8px 3px;box-shadow:inset 1px 1px 2px rgba(61,40,22,.18);pointer-events:none}
+.verse-bubble:after{content:"";position:absolute;left:8px;bottom:2px;width:7px;height:6px;border-left:1.5px solid rgba(89,66,43,.56);border-bottom:1.5px solid rgba(89,66,43,.56);transform:skew(-25deg);pointer-events:none}
+.book-page footer{position:absolute;bottom:22px;left:0;right:0;text-align:center;color:#ad9574;font-family:"Noto Serif KR",serif}
+.bottom-controls{display:flex;justify-content:center;align-items:center;gap:12px}
+.bottom-controls button{min-width:44px;padding:0 16px;background:rgba(66,43,27,.72);color:#fff8ec;border-color:rgba(255,255,255,.28)}
+.bottom-controls span{min-width:120px;text-align:center;color:#fff8ec;font-weight:900}
+.status{height:18px;margin:0;text-align:center;color:#f8ead2;font-weight:800}
+.side-panel{min-width:0;display:flex;flex-direction:column;border-radius:20px;background:rgba(255,247,234,.86);box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(135,96,51,.2)}
+.panel-tabs{display:grid;grid-template-columns:1fr 1fr;height:58px;background:rgba(232,216,195,.6)}
+.panel-tabs button{border:0;background:transparent;color:#9a8062;font-weight:900}
+.panel-tabs button.is-active{color:var(--gold);background:rgba(255,248,238,.72);box-shadow:inset 0 -2px 0 var(--gold)}
+.selected-card,.comments-card,.notes-card{padding:18px 20px;border-bottom:1px solid rgba(130,96,61,.14)}
+.selected-ref{margin:0 0 10px;color:#8b6a43;font-weight:900}
+.selected-card blockquote{margin:0;font-family:"Noto Serif KR",serif;font-size:1.03rem;line-height:1.7}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.section-head h2,.notes-card h2{margin:0;font-size:1rem}
+.comment-list{display:grid;gap:10px;max-height:30vh;overflow:auto;padding-right:4px}
+.comment-item{border:1px solid rgba(137,97,52,.18);border-radius:12px;background:rgba(255,252,246,.76);padding:13px 14px}
+.comment-meta{display:flex;justify-content:space-between;gap:10px;color:#9a846a;font-size:.78rem;font-weight:800;margin-bottom:8px}
+.comment-item p{margin:0;line-height:1.55}
+.empty{color:#927b60;font-weight:700;line-height:1.6}
+.comment-form{padding:18px 20px;border-bottom:1px solid rgba(130,96,61,.14)}
+.comment-form textarea{width:100%;resize:none;border:1px solid rgba(137,97,52,.2);border-radius:10px;background:#fffaf1;padding:12px;outline:0}
+.form-row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:12px}
+.form-row label{color:#7e674d;font-weight:800;font-size:.9rem}
+.form-row button{height:40px;min-width:88px;border:0;border-radius:10px;background:var(--gold);color:white;font-weight:900}
+.notes-card{border-bottom:0}
+.together-list{display:grid;gap:8px;margin-top:12px}
+.together-list button{border:1px solid rgba(137,97,52,.17);border-radius:10px;background:#fffaf1;text-align:left;padding:10px 12px;color:#4a3826}
+@media (max-width:1050px){
+  body{overflow:auto}
+  .topbar{grid-template-columns:1fr;gap:10px;height:auto;padding:14px 18px}
+  .main-nav{justify-content:flex-start;gap:18px;overflow:auto}
+  .search{justify-self:stretch;max-width:none}
+  .layout{height:auto;grid-template-columns:1fr;padding:12px}
+  .reader-controls{grid-template-columns:1fr 38px 90px 38px}
+  .reader-tools{display:none}
+  .book-frame{grid-template-columns:1fr;padding:12px}
+  .book-frame:before,.page-right{display:none}
+  .book-page{padding:30px 24px 46px}
+  .side-panel{min-height:520px}
+}
