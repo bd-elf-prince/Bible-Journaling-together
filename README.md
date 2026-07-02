@@ -92,7 +92,7 @@ If Supabase SQL Editor says the query is too large, run the split files instead:
 
 ```text
 supabase/bible-verses-registry-parts/00-setup.sql
-supabase/bible-verses-registry-parts/part-01.sql through part-32.sql
+supabase/bible-verses-registry-parts/part-01.sql through part-63.sql
 supabase/bible-verses-registry-parts/99-finalize.sql
 ```
 

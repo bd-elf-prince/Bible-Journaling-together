@@ -50,6 +50,11 @@ if(rows.length !== 31101 || ids.size !== rows.length){
 }
 
 fs.mkdirSync(outputDir, {recursive:true});
+for(const fileName of fs.readdirSync(outputDir)){
+  if(/^part-\d+\.sql$/.test(fileName)){
+    fs.unlinkSync(path.join(outputDir, fileName));
+  }
+}
 
 const setup = `-- Bible Journaling Together: bible_verses setup.\n-- Run this first, then run all part files in order.\n\ncreate table if not exists public.bible_verses (\n  id text primary key,\n  book_key text not null,\n  book_name text not null,\n  chapter integer not null,\n  verse integer not null,\n  content text not null,\n  sort_order integer not null unique,\n  created_at timestamptz not null default now(),\n  unique(book_key, chapter, verse)\n);\n\ncreate index if not exists bible_verses_book_chapter_idx\n  on public.bible_verses (book_key, chapter, verse);\n\nalter table public.bible_verses enable row level security;\n\ngrant usage on schema public to anon, authenticated;\ngrant select on public.bible_verses to anon, authenticated;\n\ndrop policy if exists "public read bible verses" on public.bible_verses;\ncreate policy "public read bible verses"\n  on public.bible_verses for select\n  to public\n  using (true);\n`;
 
