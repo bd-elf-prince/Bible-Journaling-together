@@ -46,7 +46,7 @@ button,select{cursor:pointer}
 .search{justify-self:end;display:flex;align-items:center;width:100%;max-width:330px;height:44px;border:1px solid #d4bea0;border-radius:999px;background:#fff8ec;padding:0 10px 0 18px}
 .search input{flex:1;min-width:0;border:0;outline:0;background:transparent}
 .search button{width:34px;height:34px;border:0;border-radius:50%;background:transparent;font-size:1.2rem}
-.layout{width:min(100%,1760px);height:calc(100dvh - 72px);margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) clamp(330px,22vw,390px);gap:clamp(14px,1.45vw,24px);padding:clamp(12px,1.05vw,18px) clamp(14px,1.35vw,24px) 18px;overflow:hidden}
+.layout{width:min(100%,1760px);height:calc(100dvh - 72px);margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) clamp(320px,23vw,380px);gap:clamp(12px,1.45vw,24px);padding:clamp(10px,1vw,16px) clamp(12px,1.35vw,24px) 18px;overflow:hidden}
 .reader-area{min-width:0;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:12px}
 .reader-controls{height:46px;display:grid;grid-template-columns:230px 42px 120px 42px 1fr;align-items:center;gap:10px}
 .reader-controls select,.reader-controls button,.bottom-controls button{
@@ -63,7 +63,7 @@ button,select{cursor:pointer}
 }
 .book-frame:before{content:"";position:absolute;left:50%;top:18px;bottom:28px;width:24px;transform:translateX(-50%);border-radius:30px;background:linear-gradient(90deg,rgba(49,23,7,.55),rgba(255,240,203,.62),rgba(49,23,7,.55));z-index:3;pointer-events:none}
 .book-page{
-  min-width:0;min-height:0;overflow:hidden;position:relative;padding:clamp(38px,3.2vw,58px) clamp(42px,4vw,68px) 50px;background:
+  min-width:0;min-height:0;overflow:hidden;position:relative;padding:clamp(30px,2.4vw,44px) clamp(30px,3.2vw,56px) 50px;background:
     radial-gradient(circle at 24% 18%,rgba(255,255,255,.72),transparent 16rem),
     linear-gradient(110deg,var(--paper-2),var(--paper));
   border:1px solid rgba(121,84,43,.28);
@@ -71,12 +71,12 @@ button,select{cursor:pointer}
 .page-left{border-radius:18px 3px 3px 18px;box-shadow:inset -24px 0 42px rgba(113,77,38,.16)}
 .page-right{border-radius:3px 18px 18px 3px;box-shadow:inset 24px 0 42px rgba(113,77,38,.16)}
 .book-page header{text-align:center;margin-bottom:28px}
-.book-page h1{font-family:"Noto Serif KR",serif;font-size:clamp(2rem,2.15vw,2.55rem);margin:0 0 12px}
+.book-page h1{font-family:"Noto Serif KR",serif;font-size:2.15rem;margin:0 0 12px}
 .book-page p{margin:0;color:#9b815e;font-weight:800}
-.verses{display:grid;gap:clamp(11px,1.15vw,18px);font-family:"Noto Serif KR",serif;font-size:clamp(.95rem,.93vw,1.08rem);line-height:1.72}
+.verses{display:grid;gap:clamp(5px,.55vw,8px);font-family:"Noto Serif KR",serif;font-size:clamp(.86rem,.88vw,1.06rem);line-height:1.68}
 .verse-row{
   width:100%;display:grid;grid-template-columns:34px minmax(0,1fr) 42px;gap:10px;align-items:start;
-  padding:8px 10px;border:1px solid transparent;border-radius:10px;background:transparent;color:inherit;text-align:left;
+  padding:7px 8px;border:1px solid transparent;border-radius:10px;background:transparent;color:inherit;text-align:left;
 }
 .verse-row:hover,.verse-row.is-selected{background:rgba(169,119,55,.13);border-color:rgba(154,106,46,.28)}
 .verse-no{color:#7c6548;font-family:"Noto Sans KR",sans-serif;font-weight:900}
@@ -93,12 +93,12 @@ button,select{cursor:pointer}
 .panel-tabs{display:grid;grid-template-columns:1fr 1fr;height:58px;background:rgba(232,216,195,.6)}
 .panel-tabs button{border:0;background:transparent;color:#9a8062;font-weight:900}
 .panel-tabs button.is-active{color:var(--gold);background:rgba(255,248,238,.72);box-shadow:inset 0 -2px 0 var(--gold)}
-.selected-card,.comments-card,.notes-card{padding:16px 20px;border-bottom:1px solid rgba(130,96,61,.14)}
+.selected-card,.comments-card,.notes-card{padding:18px 20px;border-bottom:1px solid rgba(130,96,61,.14)}
 .selected-ref{margin:0 0 10px;color:#8b6a43;font-weight:900}
 .selected-card blockquote{margin:0;font-family:"Noto Serif KR",serif;font-size:1.03rem;line-height:1.7}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .section-head h2,.notes-card h2{margin:0;font-size:1rem}
-.comment-list{display:grid;gap:10px;max-height:28vh;overflow:auto;padding-right:4px}
+.comment-list{display:grid;gap:10px;max-height:30vh;overflow:auto;padding-right:4px}
 .comment-item{border:1px solid rgba(137,97,52,.18);border-radius:12px;background:rgba(255,252,246,.76);padding:13px 14px}
 .comment-meta{display:flex;justify-content:space-between;gap:10px;color:#9a846a;font-size:.78rem;font-weight:800;margin-bottom:8px}
 .comment-item p{margin:0;line-height:1.55}

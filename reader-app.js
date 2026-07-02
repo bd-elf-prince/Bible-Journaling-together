@@ -4,8 +4,7 @@
   const SUPABASE_URL = 'https://rayvvlerwxumqvmodvsy.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_k6jRijBWjC4hcEO--pEHEg_zYI7KGUZ';
   const DATA_URL = 'data/bible-kor.json';
-  const VERSES_PER_SPREAD = 10;
-  const VERSES_PER_PAGE = VERSES_PER_SPREAD / 2;
+  const VERSES_PER_SPREAD = 12;
   const ANON_ID_KEY = 'bjt-anonymous-id';
   const RECOMMENDED_VERSES = ['gen-1-1','ps-23-1','mat-5-3','jhn-3-16','rev-22-21'];
 
@@ -16,7 +15,6 @@
     bible: [],
     bookIndex: 0,
     chapterIndex: 0,
-    spreadIndex: 0,
     selected: null,
     comments: [],
     counts: new Map()
@@ -39,20 +37,18 @@
     els.bookSelect.addEventListener('change', ()=>{
       state.bookIndex = Number(els.bookSelect.value);
       state.chapterIndex = 0;
-      state.spreadIndex = 0;
       selectFirstVerse();
       render();
     });
     els.chapterSelect.addEventListener('change', ()=>{
       state.chapterIndex = Number(els.chapterSelect.value);
-      state.spreadIndex = 0;
       selectFirstVerse();
       render();
     });
     els.prevChapter.addEventListener('click', ()=>moveChapter(-1));
     els.nextChapter.addEventListener('click', ()=>moveChapter(1));
-    els.prevSpread.addEventListener('click', ()=>moveSpread(-1));
-    els.nextSpread.addEventListener('click', ()=>moveSpread(1));
+    els.prevSpread.addEventListener('click', ()=>moveChapter(-1));
+    els.nextSpread.addEventListener('click', ()=>moveChapter(1));
     els.firstChapter.addEventListener('click', ()=>jumpTo(0,0));
     els.lastChapter.addEventListener('click', ()=>jumpTo(state.bible.length - 1, state.bible.at(-1).chapters.length - 1));
     els.commentForm.addEventListener('submit', submitComment);
@@ -163,14 +159,13 @@
     const chapter = currentChapter();
     els.chapterTitle.textContent = `${book.name} ${chapter.number}장`;
     els.chapterSubtitle.textContent = chapter.subtitle || '절마다 남겨진 작은 물방울';
-    const spread = visibleVerses();
-    els.leftVerses.innerHTML = spread.slice(0, VERSES_PER_PAGE).map(renderVerse).join('');
-    els.rightVerses.innerHTML = spread.slice(VERSES_PER_PAGE).map(renderVerse).join('');
+    const midpoint = Math.ceil(chapter.verses.length / 2);
+    els.leftVerses.innerHTML = chapter.verses.slice(0, midpoint).map(renderVerse).join('');
+    els.rightVerses.innerHTML = chapter.verses.slice(midpoint).map(renderVerse).join('');
     const chapterNo = chapterAbsoluteIndex() + 1;
-    const pageBase = absoluteSpreadIndex() * 2 - 1;
-    els.leftPageNo.textContent = String(pageBase);
-    els.rightPageNo.textContent = String(pageBase + 1);
-    els.progressText.textContent = `${absoluteSpreadIndex()} / ${totalSpreadCount()}`;
+    els.leftPageNo.textContent = String(chapterNo * 2 - 1);
+    els.rightPageNo.textContent = String(chapterNo * 2);
+    els.progressText.textContent = `${chapterNo} / ${countChapters()}`;
   }
 
   function renderVerse(verse){
@@ -274,34 +269,7 @@
     const chapterIndex = state.bible[bookIndex].chapters.findIndex(chapter => chapter.number === verse.chapter);
     state.bookIndex = bookIndex;
     state.chapterIndex = chapterIndex;
-    state.spreadIndex = Math.floor(currentChapter().verses.findIndex(row => row.id === verse.id) / VERSES_PER_SPREAD);
     state.selected = verse;
-    render();
-  }
-
-  function moveSpread(delta){
-    const next = state.spreadIndex + delta;
-    if(next >= 0 && next < chapterSpreadCount(currentChapter())){
-      state.spreadIndex = next;
-      selectFirstVerse();
-      render();
-      return;
-    }
-    let bookIndex = state.bookIndex;
-    let chapterIndex = state.chapterIndex + delta;
-    if(chapterIndex < 0 && bookIndex > 0){
-      bookIndex -= 1;
-      chapterIndex = state.bible[bookIndex].chapters.length - 1;
-    }else if(chapterIndex >= state.bible[bookIndex].chapters.length && bookIndex < state.bible.length - 1){
-      bookIndex += 1;
-      chapterIndex = 0;
-    }else{
-      return;
-    }
-    state.bookIndex = bookIndex;
-    state.chapterIndex = chapterIndex;
-    state.spreadIndex = delta < 0 ? chapterSpreadCount(currentChapter()) - 1 : 0;
-    selectFirstVerse();
     render();
   }
 
@@ -321,7 +289,6 @@
   function jumpTo(bookIndex, chapterIndex){
     state.bookIndex = Math.max(0, Math.min(bookIndex, state.bible.length - 1));
     state.chapterIndex = Math.max(0, Math.min(chapterIndex, currentBook().chapters.length - 1));
-    state.spreadIndex = 0;
     selectFirstVerse();
     render();
   }
@@ -338,7 +305,7 @@
   }
 
   function selectFirstVerse(){
-    state.selected = visibleVerses()[0] || currentChapter().verses[0];
+    state.selected = currentChapter().verses[0];
   }
 
   function selectedComments(){
@@ -353,10 +320,6 @@
 
   function currentBook(){ return state.bible[state.bookIndex]; }
   function currentChapter(){ return currentBook().chapters[state.chapterIndex]; }
-  function visibleVerses(){
-    const start = state.spreadIndex * VERSES_PER_SPREAD;
-    return currentChapter().verses.slice(start, start + VERSES_PER_SPREAD);
-  }
   function allVerses(){ return state.bible.flatMap(book => book.chapters.flatMap(chapter => chapter.verses)); }
   function findVerse(id){ return allVerses().find(verse => verse.id === id); }
   function countBooks(){ return state.bible.length; }
@@ -364,20 +327,6 @@
   function countVerses(){ return allVerses().length; }
   function chapterAbsoluteIndex(){
     return state.bible.slice(0, state.bookIndex).reduce((sum, book)=>sum + book.chapters.length, 0) + state.chapterIndex;
-  }
-  function chapterSpreadCount(chapter){ return Math.max(1, Math.ceil(chapter.verses.length / VERSES_PER_SPREAD)); }
-  function totalSpreadCount(){
-    return state.bible.reduce((sum, book)=>sum + book.chapters.reduce((bookSum, chapter)=>bookSum + chapterSpreadCount(chapter), 0), 0);
-  }
-  function absoluteSpreadIndex(){
-    let total = 1;
-    for(let bookIndex = 0; bookIndex < state.bookIndex; bookIndex += 1){
-      total += state.bible[bookIndex].chapters.reduce((sum, chapter)=>sum + chapterSpreadCount(chapter), 0);
-    }
-    for(let chapterIndex = 0; chapterIndex < state.chapterIndex; chapterIndex += 1){
-      total += chapterSpreadCount(currentBook().chapters[chapterIndex]);
-    }
-    return total + state.spreadIndex;
   }
   function anonymousId(){
     let id = localStorage.getItem(ANON_ID_KEY);
