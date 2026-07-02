@@ -299,7 +299,7 @@
     if(el.readerTitleEnglish) el.readerTitleEnglish.textContent = book.english;
     if(el.readerTitle) el.readerTitle.textContent = `${book.name} ${chapter.number}장`;
     if(el.readerSubtitle) el.readerSubtitle.textContent = chapter.subtitle || '말씀';
-    if(el.pageLeftTitle) el.pageLeftTitle.textContent = chapter.pageLeft || `${book.name} · ${chapter.number}장`;
+    if(el.pageLeftTitle) el.pageLeftTitle.textContent = `${book.name} ${chapter.number}장`;
     if(el.pageRightTitle) el.pageRightTitle.textContent = chapter.pageRight || `${book.name} · 말씀`;
     const progress = $('readerProgress'); if(progress) progress.textContent = `${(chapter.startPage || book.startPage || 1) + Math.floor(pageOffsetForSelected()/VERSES_PER_SPREAD)} / 1502`;
   }
