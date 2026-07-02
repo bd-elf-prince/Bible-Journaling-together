@@ -22,11 +22,11 @@
   ];
 
   const MOOD_RECOMMENDATIONS = {
-    '위로':['psa-23-1','psa-23-4','mat-5-4','gen-1-3'],
-    '믿음':['mat-5-6','gen-1-3','psa-23-3','mat-5-10'],
-    '평안':['psa-23-2','psa-23-6','mat-5-9','gen-1-5'],
-    '회복':['psa-23-3','mat-5-3','mat-5-5','gen-1-31'],
-    '감사':['psa-23-5','psa-23-6','gen-1-31','mat-5-8']
+    '위로':['ps-23-1','ps-23-4','mat-5-4','gen-1-3'],
+    '믿음':['mat-5-6','gen-1-3','ps-23-3','mat-5-10'],
+    '평안':['ps-23-2','ps-23-6','mat-5-9','gen-1-5'],
+    '회복':['ps-23-3','mat-5-3','mat-5-5','gen-1-31'],
+    '감사':['ps-23-5','ps-23-6','gen-1-31','mat-5-8']
   };
 
   const FALLBACK_BIBLE = [
@@ -65,7 +65,7 @@
         [31,'하나님이 지으신 모든 것을 보시니 보시기에 심히 좋았더라 저녁이 되고 아침이 되니 이는 여섯째 날이니라']
       ]}
     ]},
-    {key:'psa', name:'시편', english:'Psalms', startPage:612, chapters:[
+    {key:'ps', name:'시편', english:'Psalms', startPage:612, chapters:[
       {number:23, subtitle:'여호와는 나의 목자', pageLeft:'시편 · 푸른 풀밭', pageRight:'시편 · 내 잔이 넘치나이다', verses:[
         [1,'여호와는 나의 목자시니 내게 부족함이 없으리로다'],
         [2,'그가 나를 푸른 풀밭에 누이시며 쉴 만한 물 가로 인도하시는도다'],

@@ -8,7 +8,7 @@ const DEFAULT_VERSES = [
   'gen-1-5',
   'gen-4-1',
   'gen-16-1',
-  'psa-23-1',
+  'ps-23-1',
   'mat-5-1',
   'jhn-3-16',
   'rev-22-21'
