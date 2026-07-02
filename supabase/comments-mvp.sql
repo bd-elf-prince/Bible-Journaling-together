@@ -131,35 +131,67 @@ alter table public.comments enable row level security;
 alter table public.comment_reactions enable row level security;
 alter table public.comment_reports enable row level security;
 
+grant usage on schema public to anon, authenticated;
+grant select, insert on public.comments to anon, authenticated;
+grant select, insert on public.comment_reactions to anon, authenticated;
+grant select, insert on public.comment_reports to anon, authenticated;
+
 drop policy if exists "public read visible comments" on public.comments;
+drop policy if exists "bjt public read visible comments" on public.comments;
 create policy "public read visible comments"
   on public.comments for select
+  to public
   using (deleted_at is null);
 
 drop policy if exists "public insert anonymous comments" on public.comments;
+drop policy if exists "bjt public insert verse comments" on public.comments;
 create policy "public insert anonymous comments"
   on public.comments for insert
-  with check (deleted_at is null and char_length(trim(content)) between 1 and 1000);
+  to public
+  with check (
+    verse_id is not null
+    and verse_id ~ '^[a-z0-9]+-[0-9]+-[0-9]+$'
+    and anonymous_id is not null
+    and char_length(trim(anonymous_id)) > 0
+    and user_name is not null
+    and char_length(trim(user_name)) > 0
+    and content is not null
+    and char_length(trim(content)) between 1 and 1000
+    and deleted_at is null
+  );
 
 drop policy if exists "public read comment reactions" on public.comment_reactions;
 create policy "public read comment reactions"
   on public.comment_reactions for select
+  to public
   using (true);
 
 drop policy if exists "public insert own comment reactions" on public.comment_reactions;
 create policy "public insert own comment reactions"
   on public.comment_reactions for insert
-  with check (reaction_type = 'heart');
+  to public
+  with check (
+    comment_id is not null
+    and anonymous_id is not null
+    and char_length(trim(anonymous_id)) > 0
+    and reaction_type = 'heart'
+  );
 
 drop policy if exists "public read reports for insert return" on public.comment_reports;
 create policy "public read reports for insert return"
   on public.comment_reports for select
+  to public
   using (true);
 
 drop policy if exists "public insert reports" on public.comment_reports;
 create policy "public insert reports"
   on public.comment_reports for insert
-  with check (true);
+  to public
+  with check (
+    comment_id is not null
+    and anonymous_id is not null
+    and char_length(trim(anonymous_id)) > 0
+  );
 
 -- Admin deletion options:
 -- 1) execute public.admin_soft_delete_comment(...) from a server/edge function with service role; or
