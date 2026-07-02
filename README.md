@@ -88,12 +88,16 @@ The Supabase registry for those 31,101 comment targets is:
 supabase/bible-verses-registry.sql
 ```
 
-If Supabase SQL Editor says the query is too large, run the split files instead:
+If Supabase SQL Editor says the query is too large, do not paste dozens of split files by hand. Use direct database upload with `psql` or a database client such as DBeaver.
 
-```text
-supabase/bible-verses-registry-parts/00-setup.sql
-supabase/bible-verses-registry-parts/part-01.sql through part-63.sql
-supabase/bible-verses-registry-parts/99-finalize.sql
+```bash
+psql "postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres" -f supabase/bible-verses-registry.sql
+```
+
+The REST uploader is another option when a Supabase service role key is available:
+
+```bash
+SUPABASE_SERVICE_ROLE_KEY=... node tools/upload-bible-verses-supabase.mjs data/bible-kor.json
 ```
 
 Run the registry after the comments MVP SQL to create `public.bible_verses` and connect `comments.verse_id` to the full Bible verse id set.
