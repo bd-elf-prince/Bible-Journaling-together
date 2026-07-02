@@ -74,6 +74,14 @@ Local data can be checked with:
 node tools/check-mvp-data.mjs data/bible-kor.json
 ```
 
+After the Supabase SQL is applied, verse-level storage can be checked with:
+
+```bash
+node tools/check-supabase-comments-mvp.mjs
+```
+
+That script inserts one test comment for `gen-1-1`, one for `gen-1-2`, then confirms each query only returns its own verse.
+
 ## UX Principles
 
 Use this language:
