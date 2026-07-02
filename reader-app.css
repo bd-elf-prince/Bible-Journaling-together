@@ -18,17 +18,16 @@ body{
     radial-gradient(circle at 18% 5%,rgba(255,255,255,.8),transparent 28rem),
     linear-gradient(180deg,#f6ecdc 0%,#ead8bd 58%,#3a2618 100%);
   overflow:hidden;
-  max-width:100vw;
 }
 button,select,input,textarea{font:inherit}
 button,select{cursor:pointer}
 .topbar{
   height:72px;
   display:grid;
-  grid-template-columns:minmax(250px,330px) minmax(0,1fr) minmax(220px,360px);
+  grid-template-columns:330px 1fr 360px;
   align-items:center;
-  gap:clamp(12px,1.5vw,20px);
-  padding:10px clamp(16px,1.9vw,32px);
+  gap:20px;
+  padding:10px 32px;
   border-bottom:1px solid rgba(113,78,39,.18);
   background:rgba(251,244,232,.88);
   backdrop-filter:blur(12px);
@@ -40,14 +39,14 @@ button,select{cursor:pointer}
 .brand-icon:after{right:8px;transform:rotate(28deg) scaleX(-1)}
 .brand strong{display:block;font-family:"Noto Serif KR",serif;font-size:1.35rem;white-space:nowrap}
 .brand small{display:block;color:#8b745b;font-size:.8rem}
-.main-nav{display:flex;justify-content:center;gap:clamp(18px,2.6vw,48px);min-width:0;overflow:hidden}
-.main-nav a{position:relative;color:#4d4034;text-decoration:none;font-weight:800;white-space:nowrap}
+.main-nav{display:flex;justify-content:center;gap:48px}
+.main-nav a{position:relative;color:#4d4034;text-decoration:none;font-weight:800}
 .main-nav a.is-active:after{content:"";position:absolute;left:0;right:0;bottom:-14px;height:2px;background:var(--gold)}
 .search{justify-self:end;display:flex;align-items:center;width:100%;max-width:330px;height:44px;border:1px solid #d4bea0;border-radius:999px;background:#fff8ec;padding:0 10px 0 18px}
 .search input{flex:1;min-width:0;border:0;outline:0;background:transparent}
 .search button{width:34px;height:34px;border:0;border-radius:50%;background:transparent;font-size:1.2rem}
-.layout{width:min(100%,1760px);height:calc(100dvh - 72px);margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) clamp(320px,23vw,380px);gap:clamp(12px,1.45vw,24px);padding:clamp(10px,1vw,16px) clamp(12px,1.35vw,24px) 18px;overflow:hidden}
-.reader-area{min-width:0;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:12px}
+.layout{height:calc(100vh - 72px);display:grid;grid-template-columns:minmax(700px,1fr) 420px;gap:26px;padding:16px 24px 18px}
+.reader-area{min-width:0;display:flex;flex-direction:column;gap:12px}
 .reader-controls{height:46px;display:grid;grid-template-columns:230px 42px 120px 42px 1fr;align-items:center;gap:10px}
 .reader-controls select,.reader-controls button,.bottom-controls button{
   height:38px;border:1px solid rgba(143,103,58,.25);border-radius:12px;background:rgba(255,248,236,.78);color:#3f3124;font-weight:800;
@@ -56,14 +55,14 @@ button,select{cursor:pointer}
 .reader-tools{justify-self:end;display:flex;gap:10px}
 .reader-tools button{padding:0 14px}
 .book-frame{
-  flex:1;min-width:0;min-height:0;max-width:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;padding:18px clamp(16px,1.6vw,28px) 28px;
+  flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:0;padding:18px 28px 28px;
   border-radius:24px;background:linear-gradient(135deg,#2c160c,#72451f 50%,#241208);
   box-shadow:var(--shadow),inset 0 0 0 8px rgba(255,217,137,.16);
   position:relative;overflow:hidden;
 }
 .book-frame:before{content:"";position:absolute;left:50%;top:18px;bottom:28px;width:24px;transform:translateX(-50%);border-radius:30px;background:linear-gradient(90deg,rgba(49,23,7,.55),rgba(255,240,203,.62),rgba(49,23,7,.55));z-index:3;pointer-events:none}
 .book-page{
-  min-width:0;min-height:0;overflow:hidden;position:relative;padding:clamp(30px,2.4vw,44px) clamp(30px,3.2vw,56px) 50px;background:
+  min-width:0;min-height:0;overflow:hidden;position:relative;padding:44px 56px 50px;background:
     radial-gradient(circle at 24% 18%,rgba(255,255,255,.72),transparent 16rem),
     linear-gradient(110deg,var(--paper-2),var(--paper));
   border:1px solid rgba(121,84,43,.28);
@@ -73,7 +72,7 @@ button,select{cursor:pointer}
 .book-page header{text-align:center;margin-bottom:28px}
 .book-page h1{font-family:"Noto Serif KR",serif;font-size:2.15rem;margin:0 0 12px}
 .book-page p{margin:0;color:#9b815e;font-weight:800}
-.verses{display:grid;gap:clamp(5px,.55vw,8px);font-family:"Noto Serif KR",serif;font-size:clamp(.86rem,.88vw,1.06rem);line-height:1.68}
+.verses{display:grid;gap:8px;font-family:"Noto Serif KR",serif;font-size:clamp(.92rem,1.02vw,1.12rem);line-height:1.78}
 .verse-row{
   width:100%;display:grid;grid-template-columns:34px minmax(0,1fr) 42px;gap:10px;align-items:start;
   padding:7px 8px;border:1px solid transparent;border-radius:10px;background:transparent;color:inherit;text-align:left;
@@ -88,7 +87,7 @@ button,select{cursor:pointer}
 .bottom-controls button{min-width:44px;padding:0 16px;background:rgba(66,43,27,.72);color:#fff8ec;border-color:rgba(255,255,255,.28)}
 .bottom-controls span{min-width:120px;text-align:center;color:#fff8ec;font-weight:900}
 .status{height:18px;margin:0;text-align:center;color:#f8ead2;font-weight:800}
-.side-panel{position:relative;min-width:0;min-height:0;max-height:100%;display:flex;flex-direction:column;border-radius:20px;background:rgba(255,247,234,.86);box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(135,96,51,.2)}
+.side-panel{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column;border-radius:20px;background:rgba(255,247,234,.86);box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(135,96,51,.2)}
 .panel-close{display:none}
 .panel-tabs{display:grid;grid-template-columns:1fr 1fr;height:58px;background:rgba(232,216,195,.6)}
 .panel-tabs button{border:0;background:transparent;color:#9a8062;font-weight:900}
@@ -112,12 +111,12 @@ button,select{cursor:pointer}
 .together-list{display:grid;gap:6px;margin-top:10px;max-height:142px;overflow:auto}
 .together-list button{border:1px solid rgba(137,97,52,.17);border-radius:9px;background:#fffaf1;text-align:left;padding:8px 10px;color:#4a3826;font-size:.88rem;line-height:1.42}
 .mobile-comment-toggle{display:none}
-@media (max-width:1180px){
+@media (max-width:1050px){
   body{overflow:auto}
   .topbar{grid-template-columns:1fr;gap:10px;height:auto;padding:14px 18px}
   .main-nav{justify-content:flex-start;gap:18px;overflow:auto}
   .search{justify-self:stretch;max-width:none}
-  .layout{width:100%;height:auto;grid-template-columns:1fr;padding:12px 12px 82px;overflow:visible}
+  .layout{height:auto;grid-template-columns:1fr;padding:12px 12px 82px}
   .reader-controls{grid-template-columns:1fr 38px 90px 38px}
   .reader-tools{display:none}
   .book-frame{grid-template-columns:1fr;padding:12px}
