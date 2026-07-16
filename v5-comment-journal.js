@@ -13,6 +13,8 @@
   const $ = (selector, root=document) => root.querySelector(selector);
   const $$ = (selector, root=document) => [...root.querySelectorAll(selector)];
   const db = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+  function setText(node,text){ if(node && node.textContent!==text) node.textContent=text; }
+  function setAttr(node,name,value){ if(node && node.getAttribute(name)!==value) node.setAttribute(name,value); }
 
   function escapeHtml(value){
     return String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
@@ -46,26 +48,25 @@
     const meta = document.querySelector('meta[name="description"]');
     if(meta) meta.setAttribute('content','절마다 남겨진 작은 한 줄이 누군가에게 파도 같은 깨달음으로 닿는 교환일기 성경책');
     const brandSmall = $('.brand small');
-    if(brandSmall) brandSmall.textContent = '절 옆에 남긴 작은 한 줄이 누군가에게 파도처럼 닿습니다';
+    setText(brandSmall,'함께 말씀을 읽고, 나누고, 기록합니다');
     const commentsTitle = $('.comments-card .section-title h3');
-    if(commentsTitle) commentsTitle.textContent = '이 절의 교환일기';
+    setText(commentsTitle,'이 절의 코멘트');
     const commentTotal = $('#commentTotal');
     if(commentTotal && !commentTotal.dataset.suffix){ commentTotal.dataset.suffix='true'; }
     const formLabel = $('#commentForm label[for="moodSelect"]');
-    if(formLabel) formLabel.textContent = '이 한 줄의 온도';
+    setText(formLabel,'코멘트 분류');
     const input = $('#commentInput');
     if(input){
-      input.placeholder = '이 절을 읽다가 마음에 남은 작은 깨달음을 적어주세요. 누군가에게는 파도처럼 닿을 수 있어요.';
-      input.setAttribute('aria-label','이 절의 교환일기 한 줄 남기기');
+      setAttr(input,'placeholder','이 절에 대한 코멘트를 남겨보세요');
+      setAttr(input,'aria-label','선택한 절에 코멘트 남기기');
     }
     const submit = $('#commentForm button[type="submit"]');
-    if(submit && !submit.disabled) submit.textContent = '물방울 남기기';
+    if(submit && !submit.disabled) setText(submit,'등록');
     const badge = $('#anonymousBadge');
-    if(badge && !badge.textContent.includes('남기는 중')) badge.textContent = `${anonymousName()} · 익명으로 남김`;
+    if(badge && !badge.textContent.includes('저장 중')) setText(badge,`${anonymousName()} · 익명으로 작성`);
     const tabs = $$('.v5-panel-tabs button');
-    if(tabs[0]) tabs[0].textContent = '교환일기';
-    if(tabs[1]) tabs[1].textContent = '이어읽기';
-    if(tabs[2]) tabs[2].textContent = '익명';
+    setText(tabs[0],'코멘트');
+    setText(tabs[1],'북마크');
   }
 
   function renderLocalHint(){
@@ -74,7 +75,7 @@
     const hint = document.createElement('p');
     hint.id = 'commentCoreStatus';
     hint.className = 'comment-core-status';
-    hint.textContent = '절을 누르면 이곳에 그 절 아래 남겨진 한 줄들이 모입니다.';
+    hint.textContent = '선택한 절에 저장된 코멘트만 표시됩니다.';
     card.insertBefore(hint, $('#commentList'));
   }
 
@@ -113,7 +114,7 @@
     if(!content){ input?.focus(); message('작은 한 줄을 먼저 적어주세요.'); return; }
     if(content.length > 1000){ message('한 줄 기록은 1000자 이하로 남겨주세요.'); return; }
 
-    if(button){ button.disabled = true; button.textContent = '종이에 스미는 중…'; }
+    if(button){ button.disabled = true; button.textContent = '저장 중…'; }
     const payload = {verse_id:verse.id, user_name:anonymousName(), anonymous_id:anonymousId(), mood:select?.value || '묵상', content};
     console.log('[BJT MVP] selectedVerse before submit', {id:verse.id, reference:`${verse.bookName} ${verse.chapter}:${verse.number}`});
     console.log('[BJT MVP] comment insert payload', payload);
@@ -122,7 +123,7 @@
     if(!db){
       message('Supabase 연결 후 창세기 1:1 댓글 MVP를 확인할 수 있어요.');
       console.error('[BJT MVP] Supabase client is not available');
-      if(button){ button.disabled = false; button.textContent = '물방울 남기기'; }
+      if(button){ button.disabled = false; button.textContent = '등록'; }
       return;
     }
 
@@ -131,23 +132,23 @@
     else{
       console.error('[BJT MVP] comments insert failed', result.error);
       message(commentInsertErrorMessage(result.error));
-      if(button){ button.disabled = false; button.textContent = '물방울 남기기'; }
+      if(button){ button.disabled = false; button.textContent = '등록'; }
       return;
     }
 
     if(!saved){
       if(!LOCAL_FALLBACK_ENABLED){
         message('Supabase 저장이 확인되지 않아 댓글을 남기지 않았습니다.');
-        if(button){ button.disabled = false; button.textContent = '물방울 남기기'; }
+        if(button){ button.disabled = false; button.textContent = '등록'; }
         return;
       }
       saved = {...payload, id:`local-${Date.now()}-${Math.random().toString(16).slice(2)}`, created_at:new Date().toISOString(), local_only:true};
       const locals = loadJson(LOCAL_COMMENTS, []);
       locals.unshift(saved);
       saveJson(LOCAL_COMMENTS, locals.slice(0,200));
-      message('서버 저장은 아직 확인이 필요해서, 이 브라우저에 먼저 물방울을 남겼습니다.');
+      message('서버 저장을 확인하지 못해 브라우저에 임시 저장했습니다.');
     }else{
-      message('이 절 아래에 작은 물방울을 남겼습니다.');
+      message('선택한 절에 코멘트를 저장했습니다.');
     }
 
     const state = window.BJTReader?.state;
@@ -156,7 +157,7 @@
       if(state.commentCounts instanceof Map) state.commentCounts.set(saved.verse_id, (state.commentCounts.get(saved.verse_id) || 0) + 1);
     }
     if(input) input.value = '';
-    if(button){ button.disabled = false; button.textContent = '물방울 남기기'; }
+    if(button){ button.disabled = false; button.textContent = '등록'; }
     rerender();
     $('.comments-card')?.scrollIntoView({block:'nearest', behavior:'smooth'});
   }
@@ -172,7 +173,7 @@
       const verse = selectedVerse();
       if(status && verse){
         const count = verseComments(verse.id).length;
-        status.textContent = count ? `${count}개의 물방울이 이 절 아래에 남아 있습니다.` : '아직 이 절 아래에는 첫 물방울을 기다리는 빈 자리가 있습니다.';
+        status.textContent = count ? `이 절에 코멘트 ${count}개가 있습니다.` : '이 절에는 아직 코멘트가 없습니다.';
       }
     }, 80);
   }

@@ -1,0 +1,8 @@
+.v6-sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.v6-skip-link{position:fixed;z-index:9999;top:8px;left:8px;padding:10px 14px;border-radius:8px;background:#2f261c;color:#fff;text-decoration:none;transform:translateY(-160%)}
+.v6-skip-link:focus{transform:translateY(0)}
+body.v5-reader-ready :focus-visible{outline:3px solid #176b87!important;outline-offset:3px!important}
+body.v6-offline .system-message:empty::before{content:'오프라인 상태 · 저장된 본문을 읽을 수 있습니다.'}
+body.v6-offline .system-message{color:#7d321d}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+@media(max-width:720px){body.v5-reader-ready .verse-row{min-height:44px}body.v5-reader-ready .round-control{min-width:44px;min-height:44px}body.v5-reader-ready .search-form button{min-width:44px;min-height:40px}}

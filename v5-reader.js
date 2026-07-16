@@ -5,13 +5,14 @@
   const SUPABASE_URL = 'https://rayvvlerwxumqvmodvsy.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_k6jRijBWjC4hcEO--pEHEg_zYI7KGUZ';
   const DATA_URL = 'data/bible-kor.json';
-  const VERSES_PER_SPREAD = 12;
+  const VERSES_PER_SPREAD = 10;
   const STORAGE_ID = 'bjt-v5-anonymous-id';
   const STORAGE_NAME = 'bjt-v5-anonymous-name';
   const STORAGE_REACTED_VERSES = 'bjt-v5-reacted-verses';
   const STORAGE_LIKED_COMMENTS = 'bjt-v5-liked-comments';
   const STORAGE_FONT_SIZE = 'bjt-v5-font-size';
   const MVP_DEBUG = true;
+  const QA_MODE = new URLSearchParams(location.search).get('qa') === '1';
 
   const EMOTIONS = [
     {key:'like', label:'좋아요', icon:'♡', mood:'감사'},
@@ -105,8 +106,9 @@
     comments:[], verseReactions:[], commentReactions:[], commentCounts:new Map(),
     reactedVerses:new Set(loadJson(STORAGE_REACTED_VERSES, [])), likedComments:new Set(loadJson(STORAGE_LIKED_COMMENTS, [])),
     fontSize:localStorage.getItem(STORAGE_FONT_SIZE) || 'normal',
-    dbOnline:!!db, reactionTableReady:true, commentsReady:true
+    dbOnline:!!db, reactionTableReady:true, commentsReady:true, loadedVerseId:null
   };
+  let serverLoadToken = 0;
 
   function loadJson(key, fallback){ try{return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));}catch(_){return fallback;} }
   function saveJson(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
@@ -157,13 +159,19 @@
   }
 
   async function init(){
-    ['leftVerses','rightVerses','selectedReference','selectedVerseText','commentList','commentTotal','commentForm','commentInput','moodSelect','message','bookSelect','chapterSelect','fontSizeSelect','readerTitleEnglish','readerTitle','readerSubtitle','pageLeftTitle','pageRightTitle','anonymousBadge','copyVerseButton','emotionRow','emotionBars','topEmotionLabel','recommendMoodLabel','recommendList','bottomDock','statComments','statReactions','statSelected','nicknameInput','randomNameButton','saveNameButton','profileStatus'].forEach(id => el[id] = $(id));
+    ['leftVerses','rightVerses','selectedReference','selectedVerseText','commentList','commentTotal','commentForm','commentInput','moodSelect','message','bookSelect','chapterSelect','verseSelect','commentSortSelect','fontSizeSelect','readerTitleEnglish','readerTitle','readerSubtitle','pageLeftTitle','pageRightTitle','anonymousBadge','copyVerseButton','emotionRow','emotionBars','topEmotionLabel','recommendMoodLabel','recommendList','bottomDock','statComments','statReactions','statSelected','nicknameInput','randomNameButton','saveNameButton','profileStatus'].forEach(id => el[id] = $(id));
     document.body.classList.add('v5-reader-ready');
     applyFontSize();
     ensureChrome();
     state.selected = currentChapter().verses[0];
     bindEvents();
     render();
+    if(QA_MODE){
+      window.BJTReader = {state, render, openVerse, loadServerData, reactToVerse, reactToComment};
+      window.BJTMvpCheck = mvpCheck;
+      setMessage('레이아웃 미리보기 모드');
+      return;
+    }
     await loadBibleData();
     await loadServerData();
     window.BJTReader = {state, render, openVerse, loadServerData, reactToVerse, reactToComment};
@@ -174,50 +182,120 @@
   async function loadBibleData(){
     try{
       const response = await fetch(DATA_URL, {cache:'no-store'});
-      if(!response.ok) return;
+      if(!response.ok) throw new Error(`local Bible data ${response.status}`);
       const text = await response.text();
-      if(!text.trim()) return;
+      if(!text.trim()) throw new Error('local Bible data is empty');
       const normalized = normalizeBible(JSON.parse(text));
-      if(!normalized.length) return;
+      if(!normalized.length) throw new Error('local Bible data is invalid');
       state.bible = normalized;
       keepValidSelection();
       render();
       setMessage('성경 데이터를 불러왔습니다.');
-    }catch(error){ console.warn('Bible data load skipped', error); }
+    }catch(error){
+      console.warn('Local Bible data unavailable; using Supabase registry.', error);
+      await loadBibleFromSupabase();
+    }
   }
-  async function loadServerData(){
+  async function loadBibleFromSupabase(){
+    if(!db) return;
+    const rows = [];
+    const pageSize = 1000;
+    for(let from=0; from<40000; from+=pageSize){
+      const result = await db.from('bible_verses')
+        .select('book_key,book_name,chapter,verse,content,sort_order')
+        .order('sort_order',{ascending:true}).range(from,from+pageSize-1);
+      if(result.error){ console.warn('Supabase Bible registry load failed',result.error); return; }
+      const page = result.data || [];
+      rows.push(...page.map(row=>({bookKey:row.book_key,bookName:row.book_name,chapter:row.chapter,verse:row.verse,text:row.content,sortOrder:row.sort_order})));
+      if(page.length < pageSize) break;
+    }
+    const normalized = normalizeBible(rows);
+    if(!normalized.length) return;
+    state.bible = normalized;
+    keepValidSelection();
+    render();
+    setMessage(`${rows.length.toLocaleString('ko-KR')}절을 Supabase에서 불러왔습니다.`);
+  }
+  async function loadServerData(verseId = state.selected?.id){
     if(!db){ state.dbOnline = false; render(); setMessage('Supabase 연결을 확인해 주세요.'); return; }
+    if(!verseId) return;
+    const token = ++serverLoadToken;
     state.dbOnline = true;
-    const [comments, verseReactions, commentReactions] = await Promise.all([fetchComments(), fetchVerseReactions(), fetchCommentReactions()]);
-    state.comments = comments;
+    const spreadIds = currentChapter().verses.slice(pageOffsetForSelected(), pageOffsetForSelected() + VERSES_PER_SPREAD).map(verse => verse.id);
+    const [comments, verseReactions, commentCounts] = await Promise.all([fetchComments(verseId), fetchVerseReactions(verseId), fetchVisibleCommentCounts(spreadIds)]);
+    const commentReactions = await fetchCommentReactions(comments.map(comment => comment.id));
+    if(token !== serverLoadToken || state.selected?.id !== verseId) return;
+    state.comments = comments.filter(comment => comment.verse_id === verseId);
     state.verseReactions = verseReactions;
     state.commentReactions = commentReactions;
-    state.commentCounts = countBy(comments, 'verse_id');
+    state.commentCounts = commentCounts;
+    state.commentCounts.set(verseId, state.comments.length);
+    state.loadedVerseId = verseId;
     state.reactedVerses = new Set([...state.reactedVerses, ...verseReactions.filter(row => row.anonymous_id === anonymousId()).map(row => `${row.verse_id}:${row.reaction_type}`)]);
     state.likedComments = new Set([...state.likedComments, ...commentReactions.filter(row => row.anonymous_id === anonymousId()).map(row => row.comment_id)]);
     saveJson(STORAGE_REACTED_VERSES, [...state.reactedVerses]);
     saveJson(STORAGE_LIKED_COMMENTS, [...state.likedComments]);
     render();
   }
-  async function fetchComments(){
+  async function fetchComments(verseId){
     const base = 'id, verse_id, user_name, content, created_at, anonymous_id, mood';
     const extended = `${base}, report_count, deleted_at`;
-    let result = await db.from('comments').select(extended).is('deleted_at', null).order('created_at', {ascending:false});
-    if(result.error) result = await db.from('comments').select(base).order('created_at', {ascending:false});
-    if(result.error){ state.commentsReady = false; console.warn('[BJT MVP] comments select failed', result.error); return []; }
+    const rows = [];
+    const pageSize = 1000;
+    for(let from=0; from<100000; from+=pageSize){
+      let result = await db.from('comments').select(extended).eq('verse_id', verseId).is('deleted_at', null).order('created_at', {ascending:false}).range(from, from + pageSize - 1);
+      if(result.error) result = await db.from('comments').select(base).eq('verse_id', verseId).order('created_at', {ascending:false}).range(from, from + pageSize - 1);
+      if(result.error){ state.commentsReady = false; console.warn('[BJT MVP] comments select failed', result.error); return []; }
+      const page = result.data || [];
+      rows.push(...page);
+      if(page.length < pageSize) break;
+    }
     state.commentsReady = true;
-    if(MVP_DEBUG) console.log('[BJT MVP] comments selected', {count:(result.data || []).length});
-    return (result.data || []).filter(row => !row.deleted_at);
+    if(MVP_DEBUG) console.log('[BJT MVP] comments selected', {verseId,count:rows.length});
+    return rows.filter(row => !row.deleted_at && row.verse_id === verseId);
   }
-  async function fetchVerseReactions(){
-    const result = await db.from('verse_reactions').select('id, verse_id, anonymous_id, reaction_type, created_at').order('created_at', {ascending:false});
-    if(result.error){ state.reactionTableReady = false; return []; }
+  async function fetchVisibleCommentCounts(verseIds){
+    const counts = new Map();
+    if(!verseIds.length) return counts;
+    const pageSize = 1000;
+    for(let from=0; from<100000; from+=pageSize){
+      let result = await db.from('comments').select('verse_id, deleted_at').in('verse_id', verseIds).is('deleted_at', null).range(from, from + pageSize - 1);
+      if(result.error) result = await db.from('comments').select('verse_id').in('verse_id', verseIds).range(from, from + pageSize - 1);
+      if(result.error) break;
+      const rows = (result.data || []).filter(row => !row.deleted_at && verseIds.includes(row.verse_id));
+      rows.forEach(row => counts.set(row.verse_id, (counts.get(row.verse_id) || 0) + 1));
+      if(rows.length < pageSize) break;
+    }
+    return counts;
+  }
+  async function fetchVerseReactions(verseId){
+    const rows = [];
+    const pageSize = 1000;
+    for(let from=0; from<100000; from+=pageSize){
+      const result = await db.from('verse_reactions').select('id, verse_id, anonymous_id, reaction_type, created_at').eq('verse_id', verseId).order('created_at', {ascending:false}).range(from, from + pageSize - 1);
+      if(result.error){ state.reactionTableReady = false; return []; }
+      const page = result.data || [];
+      rows.push(...page);
+      if(page.length < pageSize) break;
+    }
     state.reactionTableReady = true;
-    return result.data || [];
+    return rows.filter(row => row.verse_id === verseId);
   }
-  async function fetchCommentReactions(){
-    const result = await db.from('comment_reactions').select('id, comment_id, anonymous_id, reaction_type, created_at').order('created_at', {ascending:false});
-    return result.error ? [] : (result.data || []);
+  async function fetchCommentReactions(commentIds){
+    if(!commentIds.length) return [];
+    const rows = [];
+    const pageSize = 1000;
+    for(let offset=0; offset<commentIds.length; offset+=100){
+      const ids = commentIds.slice(offset, offset + 100);
+      for(let from=0; from<100000; from+=pageSize){
+        const result = await db.from('comment_reactions').select('id, comment_id, anonymous_id, reaction_type, created_at').in('comment_id', ids).order('created_at', {ascending:false}).range(from, from + pageSize - 1);
+        if(result.error) return [];
+        const page = result.data || [];
+        rows.push(...page.filter(row => ids.includes(row.comment_id)));
+        if(page.length < pageSize) break;
+      }
+    }
+    return rows;
   }
   function keepValidSelection(){
     if(state.selected && findVerse(state.selected.id)){
@@ -239,13 +317,13 @@
     if(!document.querySelector('.reader-footbar')){
       const bar = document.createElement('div');
       bar.className = 'reader-footbar';
-      bar.innerHTML = '<button type="button" data-reader-first>처음</button><button type="button" data-reader-prev>‹ 이전</button><span id="readerProgress">1 / 1502</span><button type="button" data-reader-next>다음 ›</button><button type="button" data-reader-last>마지막</button>';
+      bar.innerHTML = '<button class="reader-today" type="button" data-reader-today>☀ 오늘의 말씀</button><div class="reader-pager"><button type="button" data-reader-first>« 처음으로</button><button type="button" data-reader-prev>‹</button><span id="readerProgress">1 / 1502</span><button type="button" data-reader-next>›</button><button type="button" data-reader-last>마지막으로 »</button></div><button class="reader-listen" type="button" data-tool="listen">듣기 🔊</button>';
       document.querySelector('.book-frame')?.insertAdjacentElement('afterend', bar);
     }
     if(!document.querySelector('.v5-panel-tabs')){
       const tabs = document.createElement('div');
       tabs.className = 'v5-panel-tabs';
-      tabs.innerHTML = '<button class="is-active" type="button">교환일기</button><button type="button" data-jump-recommend>이어읽기</button><button type="button" data-jump-profile>익명</button>';
+      tabs.innerHTML = '<button class="is-active" type="button" data-v8-panel="comments">코멘트</button><button type="button" data-v8-panel="bookmarks">북마크</button>';
       document.querySelector('#commentPanel')?.prepend(tabs);
     }
     const copy = el.copyVerseButton || $('copyVerseButton');
@@ -253,8 +331,10 @@
   }
   function bindEvents(){
     capture(el.commentForm, 'submit', submitComment);
-    capture(el.bookSelect, 'change', event => { state.bookIndex = Number(event.target.value); state.chapterIndex = 0; state.selected = currentChapter().verses[0]; render(); });
-    capture(el.chapterSelect, 'change', event => { state.chapterIndex = Number(event.target.value); state.selected = currentChapter().verses[0]; render(); });
+    capture(el.bookSelect, 'change', event => { state.bookIndex = Number(event.target.value); state.chapterIndex = 0; state.selected = currentChapter().verses[0]; render(); loadServerData(state.selected.id); });
+    capture(el.chapterSelect, 'change', event => { state.chapterIndex = Number(event.target.value); state.selected = currentChapter().verses[0]; render(); loadServerData(state.selected.id); });
+    capture(el.verseSelect, 'change', event => openVerse(event.target.value));
+    capture(el.commentSortSelect, 'change', renderPanel);
     capture(el.fontSizeSelect, 'change', event => setFontSize(event.target.value));
     capture($('prevChapter'), 'click', () => moveChapter(-1));
     capture($('nextChapter'), 'click', () => moveChapter(1));
@@ -269,8 +349,9 @@
       const rec = event.target.closest('[data-open-verse]'); if(rec){ stop(event); openVerse(rec.dataset.openVerse); return; }
       if(event.target.closest('[data-reader-prev]')){ stop(event); moveChapter(-1); return; }
       if(event.target.closest('[data-reader-next]')){ stop(event); moveChapter(1); return; }
-      if(event.target.closest('[data-reader-first]')){ stop(event); state.bookIndex=0; state.chapterIndex=0; state.selected=currentChapter().verses[0]; render(); return; }
-      if(event.target.closest('[data-reader-last]')){ stop(event); state.bookIndex=state.bible.length-1; state.chapterIndex=currentBook().chapters.length-1; state.selected=currentChapter().verses.at(-1); render(); return; }
+      if(event.target.closest('[data-reader-first]')){ stop(event); state.bookIndex=0; state.chapterIndex=0; state.selected=currentChapter().verses[0]; render(); loadServerData(state.selected.id); return; }
+      if(event.target.closest('[data-reader-last]')){ stop(event); state.bookIndex=state.bible.length-1; state.chapterIndex=currentBook().chapters.length-1; state.selected=currentChapter().verses.at(-1); render(); loadServerData(state.selected.id); return; }
+      if(event.target.closest('[data-reader-today]')){ stop(event); openTodayVerse(); return; }
       const moodJump = event.target.closest('[data-mood-jump]'); if(moodJump){ stop(event); showMoodRecommendations(moodJump.dataset.moodJump); return; }
       if(event.target.closest('[data-jump-recommend]')) document.querySelector('#recommendPanel')?.scrollIntoView({block:'nearest'});
       if(event.target.closest('[data-jump-profile]')) document.querySelector('.profile-card')?.scrollIntoView({block:'nearest'});
@@ -283,6 +364,7 @@
   function renderSelectors(){
     if(el.bookSelect){ el.bookSelect.innerHTML = state.bible.map((book,index)=>`<option value="${index}">${book.name}</option>`).join(''); el.bookSelect.value = String(state.bookIndex); }
     if(el.chapterSelect){ el.chapterSelect.innerHTML = currentBook().chapters.map((chapter,index)=>`<option value="${index}">${chapter.number}장</option>`).join(''); el.chapterSelect.value = String(state.chapterIndex); }
+    if(el.verseSelect){ el.verseSelect.innerHTML = currentChapter().verses.map(verse=>`<option value="${verse.id}">${verse.bookName} ${verse.chapter}장 ${verse.number}절</option>`).join(''); el.verseSelect.value = state.selected?.id || ''; }
     if(el.fontSizeSelect) el.fontSizeSelect.value = state.fontSize;
   }
   function setFontSize(size){
@@ -317,11 +399,13 @@
   }
   function renderPanel(){
     const selected = state.selected || currentChapter().verses[0];
-    const rows = state.comments.filter(comment => comment.verse_id === selected.id).sort((a,b)=>Date.parse(b.created_at || 0)-Date.parse(a.created_at || 0));
+    const rows = state.comments.filter(comment => comment.verse_id === selected.id);
+    const hearts = comment => state.commentReactions.filter(row => row.comment_id === comment.id).length;
+    rows.sort(el.commentSortSelect?.value === 'popular' ? (a,b)=>hearts(b)-hearts(a) || Date.parse(b.created_at || 0)-Date.parse(a.created_at || 0) : (a,b)=>Date.parse(b.created_at || 0)-Date.parse(a.created_at || 0));
     if(el.selectedReference) el.selectedReference.textContent = `${selected.bookName} ${selected.chapter}장 ${selected.number}절`;
     if(el.selectedVerseText) el.selectedVerseText.textContent = selected.text;
     if(el.commentTotal) el.commentTotal.textContent = String(rows.length);
-    if(el.commentList) el.commentList.innerHTML = rows.length ? rows.map(renderCommentCard).join('') : `<p class="comment-empty">아직 이 절 아래에는 남겨진 한 줄이 없습니다. 첫 물방울을 남겨주세요.</p>`;
+    if(el.commentList) el.commentList.innerHTML = rows.length ? rows.map(renderCommentCard).join('') : `<p class="comment-empty">아직 이 절 아래에는 남겨진 코멘트가 없습니다. 첫 기록을 남겨주세요.</p>`;
     renderEmotionRow(selected);
     renderEmotionBars(selected);
     renderRecommendations(selected);
@@ -363,7 +447,7 @@
   function renderCommentCard(comment){
     const hearts = state.commentReactions.filter(row => row.comment_id === comment.id).length;
     const liked = state.likedComments.has(comment.id);
-    return `<article class="comment-item"><div class="comment-meta"><span class="comment-avatar"></span><span class="comment-author">${escapeHtml(comment.user_name || '익명')}</span><time>${escapeHtml(formatDate(comment.created_at))}</time></div>${comment.mood ? `<span class="comment-mood">${escapeHtml(comment.mood)}</span>` : ''}<p class="comment-body">${escapeHtml(comment.content)}</p><div class="comment-actions"><button class="comment-heart ${liked ? 'is-active' : ''}" type="button" data-heart="${comment.id}">♡ 공감 ${hearts}</button></div></article>`;
+    return `<article class="comment-item" data-comment-verse-id="${escapeHtml(comment.verse_id)}"><div class="comment-meta"><span class="comment-avatar"></span><span class="comment-author">${escapeHtml(comment.user_name || '익명')}</span><time>${escapeHtml(formatDate(comment.created_at))}</time></div>${comment.mood ? `<span class="comment-mood">${escapeHtml(comment.mood)}</span>` : ''}<p class="comment-body">${escapeHtml(comment.content)}</p><div class="comment-actions"><button class="comment-heart ${liked ? 'is-active' : ''}" type="button" data-heart="${comment.id}">♡ 공감 ${hearts}</button></div></article>`;
   }
   function renderProfile(){
     if(el.nicknameInput && document.activeElement !== el.nicknameInput) el.nicknameInput.value = anonymousName();
@@ -412,12 +496,13 @@
     state.selected = verse;
     if(MVP_DEBUG) console.log('[BJT MVP] selectedVerse', {id:verse.id, reference:`${verse.bookName} ${verse.chapter}:${verse.number}`});
     render();
+    return loadServerData(id);
   }
   function moveChapter(step){
     let bi = state.bookIndex, ci = state.chapterIndex + step;
     if(ci < 0){ bi = Math.max(0, bi - 1); ci = state.bible[bi].chapters.length - 1; }
     if(ci >= state.bible[bi].chapters.length){ bi = Math.min(state.bible.length - 1, bi + 1); ci = 0; }
-    state.bookIndex = bi; state.chapterIndex = ci; state.selected = currentChapter().verses[0]; render();
+    state.bookIndex = bi; state.chapterIndex = ci; state.selected = currentChapter().verses[0]; render(); loadServerData(state.selected.id);
   }
   async function reactToVerse(type){
     if(!state.selected) return;
@@ -444,7 +529,7 @@
     const result = await db.from('comments').insert(payload).select('id, verse_id, user_name, content, created_at, anonymous_id, mood').single();
     button.disabled = false; button.textContent = '등록';
     if(result.error){ console.error('[BJT MVP] comments insert failed', result.error); setMessage(commentInsertErrorMessage(result.error)); return; }
-    el.commentInput.value = ''; await loadServerData(); openVerse(result.data.verse_id); setMessage('묵상을 저장했습니다.');
+    el.commentInput.value = ''; await openVerse(result.data.verse_id); setMessage('묵상을 저장했습니다.');
   }
   async function reactToComment(commentId){
     if(!db || state.likedComments.has(commentId)) return;
@@ -478,6 +563,12 @@
   function showMoodRecommendations(mood){
     renderRecommendations(state.selected || currentChapter().verses[0], mood);
     document.querySelector('#recommendPanel')?.scrollIntoView({block:'nearest'});
+  }
+  function openTodayVerse(){
+    const verses = allVerses();
+    if(!verses.length) return;
+    const day = Math.floor(Date.now() / 86400000);
+    openVerse(verses[day % verses.length].id);
   }
 
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init, {once:true}) : init();

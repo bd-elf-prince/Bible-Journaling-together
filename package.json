@@ -1,6 +1,12 @@
 {
   "private": true,
   "type": "module",
+  "scripts": {
+    "check:js": "node --check v5-reader.js && node --check v5-ripple.js && node --check v5-comment-journal.js && node --check v6-continuation.js && node --check v7-complete.js && node --check v8-reference-layout.js",
+    "check:v8": "node tools/check-v8-contract.mjs",
+    "check:verse-scope": "node tools/check-production-verse-scope.mjs",
+    "check:production": "node tools/check-production-readiness.mjs"
+  },
   "dependencies": {
     "pg": "^8.16.3"
   }

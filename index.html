@@ -14,6 +14,9 @@
   <link rel="stylesheet" href="v5-mobile-pages.css?v=20260702-04" />
   <link rel="stylesheet" href="v5-2026-polish.css?v=20260702-04" />
   <link rel="stylesheet" href="v5-final-home.css?v=20260702-05" />
+  <link rel="stylesheet" href="v6-continuation.css?v=20260716-01" />
+  <link rel="stylesheet" href="v7-complete.css?v=20260716-01" />
+  <link rel="stylesheet" href="v8-reference-layout.css?v=20260717-01" />
 </head>
 <body>
   <div class="ambient ambient-left"></div>
@@ -29,19 +32,19 @@
     </a>
     <nav class="top-nav" aria-label="주요 영역 이동">
       <a href="#reader" class="is-active">성경읽기</a>
-      <a href="#commentPanel">저널</a>
-      <a href="#commentPanel">커뮤니티</a>
-      <a href="#recommendPanel">이어읽기</a>
-      <a href="#commentPanel">설정</a>
+      <a href="#commentPanel" data-panel="journal">저널</a>
+      <a href="#commentPanel" data-panel="community">커뮤니티</a>
+      <a href="#accountDrawer" data-open-account="notes">나의 노트</a>
+      <a href="#accountDrawer" data-open-account="settings">설정</a>
     </nav>
     <form class="search-form" id="searchForm" role="search">
       <input id="searchInput" type="search" placeholder="구절, 키워드 검색" autocomplete="off" />
       <button type="submit" aria-label="검색">검색</button>
     </form>
     <div class="header-actions" aria-label="상단 도구">
-      <button type="button" aria-label="알림">♧</button>
-      <button type="button" aria-label="프로필">♣</button>
-      <button type="button" aria-label="메뉴 열기">⌄</button>
+      <button type="button" id="notificationButton" aria-label="알림">♧<span class="notification-dot" hidden></span></button>
+      <button type="button" id="authButton" aria-label="로그인 또는 프로필">로그인</button>
+      <button type="button" id="accountMenuButton" aria-label="계정 메뉴 열기">⌄</button>
     </div>
   </header>
 
@@ -84,7 +87,13 @@
             <option value="xlarge">글자 아주 크게</option>
           </select>
         </div>
-        <div class="reader-actions" aria-label="읽기 도구"></div>
+        <div class="reader-actions" aria-label="읽기 도구">
+          <button type="button" data-tool="bookmark">♡ 책갈피</button>
+          <button type="button" data-tool="memo">▱ 메모</button>
+          <button type="button" data-tool="highlight">⌁ 하이라이트</button>
+          <button type="button" data-v8-font>가 글꼴</button>
+          <button type="button" data-v8-settings aria-label="설정 열기">⚙</button>
+        </div>
       </div>
       <div class="book-frame">
         <article class="book" aria-label="펼쳐진 성경책">
@@ -115,6 +124,13 @@
       </section>
       <section class="comments-card">
         <div class="section-title"><h3>이 절의 교환일기</h3><span id="commentTotal">0</span></div>
+        <div class="v8-comments-context">
+          <select id="verseSelect" aria-label="댓글을 볼 절 선택"></select>
+          <select id="commentSortSelect" aria-label="댓글 정렬">
+            <option value="latest">최신순</option>
+            <option value="popular">공감순</option>
+          </select>
+        </div>
         <div class="comment-list" id="commentList"></div>
       </section>
       <form class="comment-form" id="commentForm">
@@ -126,9 +142,26 @@
   </main>
 
   <section class="bottom-dock" id="bottomDock" aria-label="이어 읽을 말씀 바로가기"></section>
+  <aside class="account-drawer" id="accountDrawer" aria-label="내 기록" aria-hidden="true">
+    <div class="drawer-head"><div><p class="eyebrow">My Scripture Room</p><h2 id="drawerTitle">나의 노트</h2></div><button type="button" data-close-drawer aria-label="닫기">×</button></div>
+    <div class="drawer-tabs"><button type="button" data-drawer-tab="notes" class="is-active">메모</button><button type="button" data-drawer-tab="bookmarks">책갈피</button><button type="button" data-drawer-tab="settings">설정</button></div>
+    <div id="drawerContent" class="drawer-content"></div>
+  </aside>
+  <div class="modal-backdrop" id="authModal" hidden>
+    <section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <button class="modal-close" type="button" data-close-auth aria-label="닫기">×</button>
+      <p class="eyebrow">Bible Journaling Together</p><h2 id="authTitle">나의 기록을 이어가세요</h2>
+      <p>로그인하면 책갈피, 메모와 하이라이트가 모든 기기에서 이어집니다.</p>
+      <form id="authForm"><label>이메일<input id="authEmail" type="email" autocomplete="email" required /></label><label>비밀번호<input id="authPassword" type="password" minlength="6" autocomplete="current-password" required /></label><button type="submit" data-auth-mode="signin">로그인</button><button type="button" class="secondary" id="signUpButton">회원가입</button><button type="button" class="text-button" id="magicLinkButton">이메일 로그인 링크 받기</button></form>
+      <p class="auth-status" id="authStatus" aria-live="polite"></p>
+    </section>
+  </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="v5-reader.js?v=20260702-05"></script>
   <script src="v5-ripple.js?v=20260702-05"></script>
   <script src="v5-comment-journal.js?v=20260702-05"></script>
+  <script src="v6-continuation.js?v=20260716-01"></script>
+  <script src="v7-complete.js?v=20260716-01"></script>
+  <script src="v8-reference-layout.js?v=20260717-01"></script>
 </body>
 </html>
