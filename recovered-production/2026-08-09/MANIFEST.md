@@ -1,5 +1,9 @@
 # Recovered Production Artifact Manifest
 
+## 2026-08-11 recovered dependency
+
+- `assets/fixed-blank-open-book-flat-v2.png`: restored byte-for-byte from Cloudflare production version `92ac07df` after the dependency was found in `reader-app.css`.
+
 - 상태: `candidate` — 공개 배포물 복구본
 - 복구일: 2026-08-09 (Asia/Seoul)
 - 원본: `https://commentbible.com/`
