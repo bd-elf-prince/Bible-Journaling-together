@@ -1,6 +1,10 @@
 # CommentBible production deployment manifest — 2026-08-11
 
-Status: candidate; public frontend not yet deployed.
+Status: deployed to the production Cloudflare Worker on 2026-08-11.
+
+Production version: `d2edb34e-d960-49cc-bc24-81c99874d1ed`.
+
+The public runtime is intentionally in surge read-only mode. Bible navigation stays available from hashed Cloudflare assets while authentication, dynamic comment/board reads, and all writes are disabled.
 
 ## Required asset mapping
 

@@ -1,5 +1,4 @@
 /*
-  Cache-Control: public, max-age=0, must-revalidate
   Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data:; connect-src 'self' https://rayvvlerwxumqvmodvsy.supabase.co wss://rayvvlerwxumqvmodvsy.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
   Cross-Origin-Opener-Policy: same-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
@@ -7,6 +6,12 @@
   Strict-Transport-Security: max-age=86400
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
+
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
 
 /*.js
   Cache-Control: public, max-age=0, must-revalidate
@@ -23,5 +28,11 @@
 /data/books/*
   Cache-Control: public, max-age=31536000, immutable
 
-/data/*
+/data/bible-kor.json
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+/data/runtime-config.normal.json
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+/data/runtime-config.surge.json
   Cache-Control: public, max-age=3600, stale-while-revalidate=86400

@@ -40,3 +40,13 @@
 4. staging DB에 migration 적용 및 role matrix/query plan/load test
 5. Cloudflare zone 연결 후 HTTPS redirect와 cache rule canary 적용
 6. 사용자 승인된 release hash만 production 배포
+# 2026-08-11 공개 운영 배포 완료
+
+- Cloudflare Worker `commentbible`에 surge-safe 정적 자산 배포 완료.
+- 활성 버전: `d2edb34e-d960-49cc-bc24-81c99874d1ed`.
+- 공개 런타임: `mode=surge`, `dynamicReads=false`, `writes=false`, `auth=false`.
+- 공개 검증: 성경 66권, 1,189장, 31,101절과 해시 샤드 로딩 정상.
+- 브라우저 검증: 성경 읽기 정상, 로그인·댓글 작성·게시판 글쓰기 비활성, Supabase 동적 요청 0건.
+- Edge Function 검증: `write-gateway-v4`는 503 `surge_read_only`, 기존 v3와 격리됨.
+- Cloudflare 헤더 검증: HTML/manifest 재검증, runtime config 30초, 해시 샤드 1년 immutable.
+- 보안 검증: CSP, HSTS, `X-Frame-Options: DENY`, HTTP→HTTPS 301 활성.
