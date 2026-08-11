@@ -1,0 +1,7 @@
+{
+  "mode": "surge",
+  "dynamicReads": false,
+  "writes": false,
+  "auth": false,
+  "message": "접속자가 급증해 성경 읽기 전용으로 운영 중입니다. 댓글과 게시판은 안정화 후 다시 열립니다."
+}

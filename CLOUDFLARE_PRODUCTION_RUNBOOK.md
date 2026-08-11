@@ -1,5 +1,23 @@
 # Cloudflare Production Runbook
 
+## 2026-08-11 verified public state
+
+- `http://commentbible.com/` still returns HTTP 200 instead of a 301/308 redirect.
+- HTTPS responses do not include `Strict-Transport-Security`.
+- HTML and fixed-name JavaScript currently return `max-age=0, must-revalidate` and `CF-Cache-Status: HIT`.
+- `/data/manifest.json` currently returns 404, confirming that the sharded frontend candidate is not deployed.
+- The Cloudflare dashboard session is not authenticated, so zone settings were not changed or marked complete.
+
+Updated cache target:
+
+| Path | Browser cache | Reason |
+|---|---:|---|
+| HTML, fixed-name JS/CSS | 0, revalidate | release changes must become visible immediately |
+| `/data/manifest.json` | 0, revalidate | selects the current content hashes |
+| `/data/books/*` | 1 year, immutable | filename contains the content hash |
+| `/data/bible-kor.json` | 1 hour + stale | retained fallback only |
+| Supabase/Auth/API | no-store/bypass | user and authorization data |
+
 - 상태: `candidate` — zone 읽기 권한과 staging 검증 전
 - 대상: CommentBible production
 

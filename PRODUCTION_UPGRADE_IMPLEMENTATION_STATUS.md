@@ -1,5 +1,7 @@
 # CommentBible Production Upgrade — Implementation Status
 
+> 2026-08-11 갱신: 아래 2026-08-09 초기 상태보다 최신인 실제 적용 현황은 `COMMENTBIBLE_PRODUCTION_UPGRADE_PLAN.md` 16절과 `supabase/audits/2026-08-11_*` 기록이 기준이다. 운영 DB index·RLS 성능 교정과 Edge Function v4 서지 차단까지 적용됐으며, 공개 프론트와 Cloudflare zone 설정은 아직 미배포다.
+
 - 상태: `candidate`
 - branch: `codex/production-upgrade`
 - 작성일: 2026-08-09

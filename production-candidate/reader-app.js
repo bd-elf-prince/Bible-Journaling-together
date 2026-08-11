@@ -3,6 +3,9 @@
 
   const SUPABASE_URL = 'https://rayvvlerwxumqvmodvsy.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_k6jRijBWjC4hcEO--pEHEg_zYI7KGUZ';
+  const WRITE_GATEWAY_FUNCTION = 'write-gateway-v4';
+  const RUNTIME_CONFIG_URL = 'data/runtime-config.json';
+  const MANIFEST_URL = 'data/manifest.json';
   const DATA_URL = 'data/bible-kor.json';
   const ANON_ID_KEY = 'bjt-anonymous-id';
   const BOOKMARKS_KEY = 'bjt-bookmarks';
@@ -21,6 +24,8 @@
   const chapterLayoutCache = new WeakMap();
   const state = {
     bible: [],
+    bibleManifest: null,
+    bookLoads: new Map(),
     bookIndex: 0,
     chapterIndex: 0,
     spreadIndex: 0,
@@ -38,6 +43,7 @@
     authMode: 'login',
     passwordRecovery: false,
     managingCommentId: null
+    ,runtime: {mode:'normal', dynamicReads:true, writes:true, auth:true, message:''}
   };
 
   document.addEventListener('DOMContentLoaded', init, {once:true});
@@ -48,14 +54,40 @@
     restoreLocalTools();
     restoreSettings();
     bindEvents();
-    await initAuth();
+    await loadRuntimeConfig();
+    if(state.runtime.auth) await initAuth();
+    else disableDynamicControls();
     await loadBible();
     render();
     document.fonts?.ready.then(refreshChapterLayout);
     if(new URLSearchParams(location.search).get('auth') === '1') openAuthDialog();
-    refreshComments().catch((error)=>{
+    if(!state.runtime.dynamicReads) setStatus(state.runtime.message || '현재 성경 읽기 전용으로 운영 중입니다.');
+    else refreshComments().catch((error)=>{
       console.warn('[BJT] comments load skipped', error);
       setStatus('성경 읽기는 준비됐고, 댓글 연결을 다시 확인하는 중입니다.');
+    });
+  }
+
+  async function loadRuntimeConfig(){
+    try{
+      const response = await fetch(RUNTIME_CONFIG_URL, {cache:'no-cache'});
+      if(!response.ok) return;
+      const config = await response.json();
+      state.runtime = {
+        mode:config?.mode === 'surge' ? 'surge' : 'normal',
+        dynamicReads:config?.dynamicReads !== false,
+        writes:config?.writes !== false,
+        auth:config?.auth !== false,
+        message:String(config?.message || '').slice(0, 240)
+      };
+    }catch(error){
+      console.warn('[BJT] runtime config unavailable; normal mode retained', error);
+    }
+  }
+
+  function disableDynamicControls(){
+    [els.authButton, els.commentWriteButton, els.commentInput].forEach(element=>{
+      if(element) element.disabled = true;
     });
   }
 
@@ -80,14 +112,7 @@
   }
 
   function bindEvents(){
-    els.bookSelect.addEventListener('change', ()=>{
-      state.bookIndex = Number(els.bookSelect.value);
-      state.chapterIndex = 0;
-      state.spreadIndex = 0;
-      selectFirstVerse();
-      render();
-      refreshComments();
-    });
+    els.bookSelect.addEventListener('change', ()=>jumpTo(Number(els.bookSelect.value), 0));
     els.chapterSelect.addEventListener('change', ()=>{
       state.chapterIndex = Number(els.chapterSelect.value);
       state.spreadIndex = 0;
@@ -191,6 +216,21 @@
 
   async function loadBible(){
     try{
+      const manifestResponse = await fetch(MANIFEST_URL, {cache:'no-cache'});
+      if(!manifestResponse.ok) throw new Error(`bible manifest ${manifestResponse.status}`);
+      state.bibleManifest = await manifestResponse.json();
+      state.bible = normalizeBibleManifest(state.bibleManifest);
+      if(!state.bible.length) throw new Error('empty bible manifest');
+      await ensureBookLoaded(0);
+      selectFirstVerse();
+      setStatus(`성경 ${countBooks()}권 ${countChapters()}장 ${countVerses()}절을 불러왔습니다.`);
+      return;
+    }catch(manifestError){
+      console.warn('[BJT] bible manifest load failed; using full dataset fallback', manifestError);
+      state.bibleManifest = null;
+      state.bookLoads.clear();
+    }
+    try{
       const response = await fetch(DATA_URL, {cache:'force-cache'});
       const rows = await response.json();
       state.bible = normalizeBible(rows);
@@ -215,6 +255,69 @@
       selectFirstVerse();
       setStatus('성경 데이터를 다시 확인하는 중입니다.');
     }
+  }
+
+  function normalizeBibleManifest(manifest){
+    if(!Array.isArray(manifest?.books)) return [];
+    return manifest.books.map((book)=>({
+      key: String(book.key || ''),
+      name: cleanText(book.name || book.key),
+      english: cleanText(book.english || ''),
+      shardUrl: String(book.url || ''),
+      shardSha256: String(book.sha256 || ''),
+      loaded: false,
+      chapters: (book.chapters || []).map((chapter)=>({
+        number: Number(chapter.number),
+        subtitle: cleanText(chapter.subtitle || ''),
+        verseCount: Number(chapter.verseCount || 0),
+        verses: []
+      })).filter(chapter => chapter.number)
+    })).filter(book => book.key && book.shardUrl && book.chapters.length);
+  }
+
+  async function sha256Hex(buffer){
+    if(!globalThis.crypto?.subtle) return '';
+    const digest = await globalThis.crypto.subtle.digest('SHA-256', buffer);
+    return [...new Uint8Array(digest)].map(value => value.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function ensureBookLoaded(bookIndex){
+    const index = Math.max(0, Math.min(Number(bookIndex) || 0, state.bible.length - 1));
+    const stub = state.bible[index];
+    if(!stub || stub.loaded || !state.bibleManifest) return stub;
+    if(state.bookLoads.has(stub.key)) return state.bookLoads.get(stub.key);
+    const load = (async()=>{
+      const response = await fetch(stub.shardUrl, {cache:'force-cache'});
+      if(!response.ok) throw new Error(`bible shard ${stub.key} ${response.status}`);
+      const buffer = await response.arrayBuffer();
+      const actualHash = await sha256Hex(buffer);
+      if(actualHash && stub.shardSha256 && actualHash !== stub.shardSha256){
+        throw new Error(`bible shard integrity mismatch: ${stub.key}`);
+      }
+      const decoded = new TextDecoder().decode(buffer);
+      const normalized = normalizeBible([JSON.parse(decoded)])[0];
+      if(!normalized || normalized.key !== stub.key) throw new Error(`invalid bible shard: ${stub.key}`);
+      const loaded = {...stub, ...normalized, loaded:true};
+      state.bible[index] = loaded;
+      prefetchAdjacentBookShards(index);
+      return loaded;
+    })().finally(()=>state.bookLoads.delete(stub.key));
+    state.bookLoads.set(stub.key, load);
+    return load;
+  }
+
+  function prefetchAdjacentBookShards(bookIndex){
+    [bookIndex - 1, bookIndex + 1].forEach((index)=>{
+      const book = state.bible[index];
+      if(!book?.shardUrl || book.loaded || document.head.querySelector(`[data-bible-prefetch="${book.key}"]`)) return;
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.as = 'fetch';
+      link.href = book.shardUrl;
+      link.crossOrigin = 'anonymous';
+      link.dataset.biblePrefetch = book.key;
+      document.head.appendChild(link);
+    });
   }
 
   function loadFileBibleData(){
@@ -263,6 +366,13 @@
 
   async function refreshComments(){
     if(!state.selected) return;
+    if(!state.runtime.dynamicReads){
+      state.comments = [];
+      state.counts = new Map();
+      renderComments();
+      renderChapter();
+      return;
+    }
     await loadComments(visibleVerseIds());
     renderComments();
     renderChapter();
@@ -414,9 +524,9 @@
     renderBiblePicker();
   }
 
-  function applyBiblePicker(){
+  async function applyBiblePicker(){
     closeBiblePicker();
-    jumpTo(pickerBookIndex, pickerChapterIndex);
+    await jumpTo(pickerBookIndex, pickerChapterIndex);
   }
 
   function closeBiblePicker(){
@@ -574,6 +684,10 @@
 
   async function submitComment(event){
     event.preventDefault();
+    if(!state.runtime.writes){
+      setStatus(state.runtime.message || '현재 접속자 급증으로 댓글 작성을 잠시 중단했습니다.');
+      return;
+    }
     const content = els.commentInput.value.trim();
     if(!content || !state.selected) return;
     const targetVerse = state.selected;
@@ -646,7 +760,7 @@
   async function createVerseComment({verseId, content, isAnonymous, anonymousName, password}){
     if(state.commentBackend !== 'legacy'){
       const unifiedResult = await withTimeout(
-        db.rpc('create_discussion_comment', {
+        invokeWrite('create_discussion_comment', {
           p_target_key: verseDiscussionTarget(verseId),
           p_content: content,
           p_parent_id: null,
@@ -667,14 +781,14 @@
 
     return withTimeout(
       isAnonymous
-        ? db.rpc('create_anonymous_comment', {
+        ? invokeWrite('create_anonymous_comment', {
           p_verse_id: verseId,
           p_content: content,
           p_user_name: anonymousName,
           p_password: password,
           p_anonymous_id: anonymousId()
         })
-        : db.rpc('create_member_comment', {
+        : invokeWrite('create_member_comment', {
           p_verse_id: verseId,
           p_content: content
         }),
@@ -803,17 +917,33 @@
     if(els.commentManageStatus) els.commentManageStatus.textContent = text || '';
   }
 
-  function searchVerse(event){
+  async function searchVerse(event){
     event.preventDefault();
     const query = els.searchInput.value.trim();
     if(!query) return;
-    let match = findByReference(query);
+    let match = await findByReference(query);
+    if(!match && query.length < 2){
+      setStatus('본문 검색어는 두 글자 이상 입력해 주세요.');
+      return;
+    }
     if(!match) match = allVerses().find(row => row.text.includes(query));
-    if(match) openVerse(match.id);
+    if(!match && db && state.runtime.dynamicReads){
+      const safeQuery = query.replace(/[%_]/g, value => `\\${value}`);
+      const {data, error} = await db
+        .from('bible_verses')
+        .select('id')
+        .ilike('content', `%${safeQuery}%`)
+        .order('sort_order', {ascending:true})
+        .limit(1)
+        .maybeSingle();
+      if(error) console.warn('[BJT] server bible search failed', error);
+      if(data?.id) match = data;
+    }
+    if(match) await openVerse(match.id);
     else setStatus('맞는 말씀을 찾지 못했습니다.');
   }
 
-  function findByReference(query){
+  async function findByReference(query){
     const normalized = query
       .replace(/[：]/g, ':')
       .replace(/\s+/g, ' ')
@@ -826,7 +956,17 @@
     const chapter = Number(reference[2]);
     const verse = Number(reference[3] || 1);
     if(!chapter || !verse) return null;
-    return allVerses().find(row => matchesBookName(row.bookName, bookQuery) && row.chapter === chapter && row.number === verse) || null;
+    const bookIndex = state.bible.findIndex(book => matchesBookName(book.name, bookQuery));
+    if(bookIndex < 0) return null;
+    try{
+      await ensureBookLoaded(bookIndex);
+    }catch(error){
+      console.warn('[BJT] reference book load failed', error);
+      return null;
+    }
+    return state.bible[bookIndex].chapters
+      .find(row => row.number === chapter)?.verses
+      .find(row => row.number === verse) || null;
   }
 
   function matchesBookName(bookName, query){
@@ -853,7 +993,17 @@
     return String(value || '').replace(/\s+/g, '').trim();
   }
 
-  function openVerse(id){
+  async function openVerse(id){
+    const targetBookIndex = state.bible.findIndex(book => id.startsWith(`${book.key}-`));
+    if(targetBookIndex >= 0){
+      try{
+        await ensureBookLoaded(targetBookIndex);
+      }catch(error){
+        console.warn('[BJT] bible book load failed', error);
+        setStatus('해당 성경 본문을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+        return;
+      }
+    }
     const verse = findVerse(id);
     if(!verse) return;
     const bookIndex = state.bible.findIndex(book => book.key === verse.bookKey);
@@ -871,7 +1021,7 @@
     refreshComments();
   }
 
-  function moveChapter(delta){
+  async function moveChapter(delta){
     let bookIndex = state.bookIndex;
     let chapterIndex = state.chapterIndex + delta;
     if(chapterIndex < 0 && bookIndex > 0){
@@ -881,7 +1031,7 @@
       bookIndex += 1;
       chapterIndex = 0;
     }
-    jumpTo(bookIndex, chapterIndex);
+    await jumpTo(bookIndex, chapterIndex);
   }
 
   function moveSpread(delta){
@@ -894,11 +1044,19 @@
       refreshComments();
       return;
     }
-    moveChapterBySpread(delta);
+    void moveChapterBySpread(delta);
   }
 
-  function jumpTo(bookIndex, chapterIndex){
-    state.bookIndex = Math.max(0, Math.min(bookIndex, state.bible.length - 1));
+  async function jumpTo(bookIndex, chapterIndex){
+    const nextBookIndex = Math.max(0, Math.min(bookIndex, state.bible.length - 1));
+    try{
+      await ensureBookLoaded(nextBookIndex);
+    }catch(error){
+      console.warn('[BJT] bible book load failed', error);
+      setStatus('해당 성경 본문을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+    state.bookIndex = nextBookIndex;
     state.chapterIndex = Math.max(0, Math.min(chapterIndex, currentBook().chapters.length - 1));
     state.spreadIndex = 0;
     selectFirstVerse();
@@ -906,12 +1064,20 @@
     refreshComments();
   }
 
-  function jumpToFirstSpread(){
-    jumpTo(0, 0);
+  async function jumpToFirstSpread(){
+    await jumpTo(0, 0);
   }
 
-  function jumpToLastSpread(){
-    state.bookIndex = state.bible.length - 1;
+  async function jumpToLastSpread(){
+    const lastBookIndex = state.bible.length - 1;
+    try{
+      await ensureBookLoaded(lastBookIndex);
+    }catch(error){
+      console.warn('[BJT] last bible book load failed', error);
+      setStatus('마지막 성경 본문을 불러오지 못했습니다.');
+      return;
+    }
+    state.bookIndex = lastBookIndex;
     state.chapterIndex = currentBook().chapters.length - 1;
     state.spreadIndex = spreadCountForChapter(currentChapter()) - 1;
     selectFirstVisibleVerse();
@@ -919,7 +1085,7 @@
     refreshComments();
   }
 
-  function moveChapterBySpread(delta){
+  async function moveChapterBySpread(delta){
     let bookIndex = state.bookIndex;
     let chapterIndex = state.chapterIndex + delta;
     if(chapterIndex < 0 && bookIndex > 0){
@@ -929,6 +1095,13 @@
       bookIndex += 1;
       chapterIndex = 0;
     }else if(chapterIndex < 0 || chapterIndex >= state.bible[bookIndex].chapters.length){
+      return;
+    }
+    try{
+      await ensureBookLoaded(bookIndex);
+    }catch(error){
+      console.warn('[BJT] adjacent bible book load failed', error);
+      setStatus('다음 성경 본문을 불러오지 못했습니다.');
       return;
     }
     state.bookIndex = bookIndex;
@@ -1012,10 +1185,8 @@
   }
 
   function openTodayVerse(){
-    const verses = allVerses();
-    if(!verses.length) return;
     const day = Math.floor(Date.now() / 86400000);
-    openVerse(verses[day % verses.length].id);
+    void openVerse(RECOMMENDED_VERSES[day % RECOMMENDED_VERSES.length]);
   }
 
   function listenSelected(){
@@ -1454,7 +1625,7 @@
   function findVerse(id){ return allVerses().find(verse => verse.id === id); }
   function countBooks(){ return state.bible.length; }
   function countChapters(){ return state.bible.reduce((sum, book)=>sum + book.chapters.length, 0); }
-  function countVerses(){ return allVerses().length; }
+  function countVerses(){ return Number(state.bibleManifest?.totals?.verses || allVerses().length); }
   function currentChapterSpreads(){
     const chapter = currentChapter();
     const singlePage = getComputedStyle(els.rightVerses.closest('.book-page')).display === 'none';
@@ -1624,6 +1795,22 @@
     closeCommentComposer();
     els.journal?.classList.remove('is-open');
   }
+  async function invokeWrite(action, payload){
+    if(!db?.functions) return {data:null, error:new Error('write gateway unavailable')};
+    const idempotencyKey = globalThis.crypto?.randomUUID
+      ? globalThis.crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const result = await db.functions.invoke(WRITE_GATEWAY_FUNCTION, {
+      body:{
+        action,
+        payload,
+        idempotency_key:idempotencyKey
+      }
+    });
+    if(result.error) return {data:null, error:result.error};
+    if(result.data?.error) return {data:null, error:new Error(result.data.error)};
+    return {data:result.data?.data, error:null};
+  }
   function withTimeout(promise, ms, label){
     let timer;
     const timeout = new Promise((_, reject)=>{
@@ -1673,5 +1860,3 @@
     return String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
   }
 })();
-
-

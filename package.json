@@ -1,6 +1,10 @@
 {
   "private": true,
   "type": "module",
+  "scripts": {
+    "bible:shard": "node tools/shard-bible-data.mjs",
+    "verify:production-candidate": "node tools/verify-production-candidate.mjs"
+  },
   "dependencies": {
     "pg": "^8.16.3"
   }

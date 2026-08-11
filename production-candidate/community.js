@@ -3,6 +3,8 @@
 
   const SUPABASE_URL = 'https://rayvvlerwxumqvmodvsy.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_k6jRijBWjC4hcEO--pEHEg_zYI7KGUZ';
+  const WRITE_GATEWAY_FUNCTION = 'write-gateway-v4';
+  const RUNTIME_CONFIG_URL = 'data/runtime-config.json';
   const PAGE_SIZE = 20;
   const POST_WINDOW_SIZE = 100;
   const COMMENT_WINDOW_SIZE = 100;
@@ -53,7 +55,14 @@
     manageAction:null,
     manageTargetId:null,
     viewed:new Set(),
-    serverVoteActive:new Map()
+    serverVoteActive:new Map(),
+    postCursor:null,
+    postsExhausted:false,
+    postsLoading:false,
+    commentCursors:new Map(),
+    commentExhausted:new Map(),
+    commentsLoading:new Set(),
+    runtime:{mode:'normal', dynamicReads:true, writes:true, auth:true, message:''}
   };
 
   document.addEventListener('DOMContentLoaded', init, {once:true});
@@ -80,14 +89,39 @@
     restoreLocalState();
     bindEvents();
     applyQueryFilter();
-    await initAuth();
+    await loadRuntimeConfig();
+    if(state.runtime.auth) await initAuth();
+    else disableDynamicControls();
     await connectBackend();
     renderList();
     openHashPost();
   }
 
+  async function loadRuntimeConfig(){
+    try{
+      const response = await fetch(RUNTIME_CONFIG_URL, {cache:'no-cache'});
+      if(!response.ok) return;
+      const config = await response.json();
+      state.runtime = {
+        mode:config?.mode === 'surge' ? 'surge' : 'normal',
+        dynamicReads:config?.dynamicReads !== false,
+        writes:config?.writes !== false,
+        auth:config?.auth !== false,
+        message:String(config?.message || '').slice(0, 240)
+      };
+    }catch(error){
+      console.warn('[BJT] runtime config unavailable; normal mode retained', error);
+    }
+  }
+
+  function disableDynamicControls(){
+    [els.boardAuthButton, els.openWriteButton, els.votePostButton, els.boardCommentInput].forEach(element=>{
+      if(element) element.disabled = true;
+    });
+  }
+
   function bindEvents(){
-    els.boardTabs.addEventListener('click', event=>{
+    els.boardTabs.addEventListener('click', async event=>{
       const button = event.target.closest('[data-board]');
       if(!button) return;
       state.board = button.dataset.board;
@@ -95,23 +129,34 @@
       state.page = 1;
       els.categoryFilter.value = 'all';
       updateBoardTabs();
-      renderList();
+      await refreshServerList();
     });
-    els.categoryFilter.addEventListener('change', ()=>{
+    els.categoryFilter.addEventListener('change', async ()=>{
       state.category = els.categoryFilter.value;
       state.page = 1;
-      renderList();
+      await refreshServerList();
     });
-    els.sortFilter.addEventListener('change', ()=>{
+    els.sortFilter.addEventListener('change', async ()=>{
       state.sort = els.sortFilter.value;
       state.page = 1;
-      renderList();
+      await refreshServerList();
     });
     els.postList.addEventListener('click', event=>{
       const button = event.target.closest('[data-open-post]');
       if(button) openPost(button.dataset.openPost);
     });
-    els.pagination.addEventListener('click', event=>{
+    els.pagination.addEventListener('click', async event=>{
+      const loadMore = event.target.closest('[data-load-more-posts]');
+      if(loadMore){
+        loadMore.disabled = true;
+        try{
+          await loadServerPosts(false);
+          renderList();
+        }catch(_){
+          setStatus('게시글을 더 불러오지 못했습니다.', 'warning');
+        }
+        return;
+      }
       const button = event.target.closest('[data-page]');
       if(!button) return;
       state.page = Number(button.dataset.page) || 1;
@@ -311,6 +356,12 @@
   }
 
   async function connectBackend(){
+    if(!state.runtime.dynamicReads){
+      state.posts = [];
+      state.comments = [];
+      setBackend('surge', state.runtime.message || '현재 접속자 급증으로 읽기 전용 운영 중입니다.');
+      return;
+    }
     if(location.protocol === 'file:' || !db){
       setBackend('local', '서버 기능 미연결: 이 브라우저에만 저장되는 작업본 모드입니다.');
       return;
@@ -332,39 +383,134 @@
 
   function setBackend(mode, message, tone='warning'){
     state.backend = mode;
-    els.backendMode.textContent = mode === 'supabase' ? '서버' : '로컬 작업본';
+    els.backendMode.textContent = mode === 'supabase' ? '서버' : mode === 'surge' ? '읽기 전용' : '로컬 작업본';
     els.engineStatus.textContent = message;
     els.engineStatus.className = `engine-status is-${tone}`;
   }
 
-  async function loadServerPosts(){
-    const result = await withTimeout(
-      db.from('board_posts_public')
-        .select('id, target_key, board_type, category, title, content, author_name, author_user_id, is_anonymous, has_edit_password, can_manage, is_official, is_pinned, comments_enabled, view_count, reaction_count, comment_count, created_at, updated_at')
-        .order('is_pinned', {ascending:false})
-        .order('created_at', {ascending:false})
-        .limit(POST_WINDOW_SIZE),
-      9000,
-      'board posts select'
-    );
-    if(result.error) throw result.error;
-    state.posts = (result.data || []).map(normalizePost);
+  async function refreshServerList(){
+    if(state.backend !== 'supabase'){
+      renderList();
+      return;
+    }
+    try{
+      await loadServerPosts(true);
+    }catch(_){
+      setStatus('게시글 목록을 새로 불러오지 못했습니다.', 'warning');
+    }
+    renderList();
   }
 
-  async function loadServerComments(targetKey){
-    const result = await withTimeout(
-      db.from('discussion_comments_public')
+  function postSortColumn(){
+    return {
+      recommended:'reaction_count',
+      comments:'comment_count',
+      views:'view_count'
+    }[state.sort] || 'created_at';
+  }
+
+  async function loadServerPosts(reset=true){
+    if(state.postsLoading) return;
+    state.postsLoading = true;
+    try{
+      if(reset){
+        state.postCursor = null;
+        state.postsExhausted = false;
+      }
+      const sortColumn = postSortColumn();
+      let query = db.from('board_posts_public')
+        .select('id, target_key, board_type, category, title, content, author_name, author_user_id, is_anonymous, has_edit_password, can_manage, is_official, is_pinned, comments_enabled, view_count, reaction_count, comment_count, created_at, updated_at')
+        .order('is_pinned', {ascending:false});
+      if(state.board !== 'all') query = query.eq('board_type', state.board);
+      if(state.category !== 'all') query = query.eq('category', state.category);
+      const serverSearch = state.search.replace(/[,%_()."\\]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+      if(serverSearch){
+        if(state.searchScope === 'title') query = query.ilike('title', `%${serverSearch}%`);
+        else if(state.searchScope === 'author') query = query.ilike('author_name', `%${serverSearch}%`);
+        else query = query.or(`title.ilike.%${serverSearch}%,content.ilike.%${serverSearch}%`);
+      }
+      if(sortColumn !== 'created_at') query = query.order(sortColumn, {ascending:false});
+      query = query.order('created_at', {ascending:false}).order('id', {ascending:false});
+      if(!reset && state.postCursor){
+        const cursor = state.postCursor;
+        const conditions = [`is_pinned.lt.${cursor.is_pinned}`];
+        if(sortColumn === 'created_at'){
+          conditions.push(
+            `and(is_pinned.eq.${cursor.is_pinned},created_at.lt.${cursor.created_at})`,
+            `and(is_pinned.eq.${cursor.is_pinned},created_at.eq.${cursor.created_at},id.lt.${cursor.id})`
+          );
+        }else{
+          conditions.push(
+            `and(is_pinned.eq.${cursor.is_pinned},${sortColumn}.lt.${cursor.sort_value})`,
+            `and(is_pinned.eq.${cursor.is_pinned},${sortColumn}.eq.${cursor.sort_value},created_at.lt.${cursor.created_at})`,
+            `and(is_pinned.eq.${cursor.is_pinned},${sortColumn}.eq.${cursor.sort_value},created_at.eq.${cursor.created_at},id.lt.${cursor.id})`
+          );
+        }
+        query = query.or(conditions.join(','));
+      }
+      const result = await withTimeout(
+        query.limit(POST_WINDOW_SIZE + 1),
+        9000,
+        'board posts select'
+      );
+      if(result.error) throw result.error;
+      const fetched = result.data || [];
+      const pageRows = fetched.slice(0, POST_WINDOW_SIZE).map(normalizePost);
+      state.postsExhausted = fetched.length <= POST_WINDOW_SIZE;
+      const last = pageRows.at(-1);
+      state.postCursor = last ? {
+        is_pinned:Boolean(last.is_pinned),
+        sort_value:sortColumn === 'created_at' ? null : Number(last[sortColumn] || 0),
+        created_at:last.created_at,
+        id:last.id
+      } : state.postCursor;
+      if(reset){
+        state.posts = pageRows;
+      }else{
+        const byId = new Map(state.posts.map(post=>[String(post.id), post]));
+        pageRows.forEach(post=>byId.set(String(post.id), post));
+        state.posts = [...byId.values()];
+      }
+    }finally{
+      state.postsLoading = false;
+    }
+  }
+
+  async function loadServerComments(targetKey, append=false){
+    if(state.commentsLoading.has(targetKey)) return;
+    state.commentsLoading.add(targetKey);
+    try{
+      let query = db.from('discussion_comments_public')
         .select('id, target_key, parent_id, author_name, content, created_at, updated_at, has_edit_password, can_manage, is_official')
         .eq('target_key', targetKey)
-        .order('created_at', {ascending:true})
-        .limit(COMMENT_WINDOW_SIZE),
-      9000,
-      'discussion comments select'
-    );
-    if(result.error) throw result.error;
-    state.comments = state.comments
-      .filter(row => row.target_key !== targetKey)
-      .concat((result.data || []).map(normalizeComment));
+        .order('created_at', {ascending:false})
+        .order('id', {ascending:false});
+      const cursor = append ? state.commentCursors.get(targetKey) : null;
+      if(cursor){
+        query = query.or([
+          `created_at.lt.${cursor.created_at}`,
+          `and(created_at.eq.${cursor.created_at},id.lt.${cursor.id})`
+        ].join(','));
+      }
+      const result = await withTimeout(
+        query.limit(COMMENT_WINDOW_SIZE + 1),
+        9000,
+        'discussion comments select'
+      );
+      if(result.error) throw result.error;
+      const fetched = result.data || [];
+      const pageRows = fetched.slice(0, COMMENT_WINDOW_SIZE).map(normalizeComment);
+      state.commentExhausted.set(targetKey, fetched.length <= COMMENT_WINDOW_SIZE);
+      const last = pageRows.at(-1);
+      if(last) state.commentCursors.set(targetKey, {created_at:last.created_at, id:last.id});
+      const retained = state.comments.filter(row => row.target_key !== targetKey);
+      const existing = append ? state.comments.filter(row => row.target_key === targetKey) : [];
+      const byId = new Map(existing.map(row=>[String(row.id), row]));
+      pageRows.forEach(row=>byId.set(String(row.id), row));
+      state.comments = retained.concat([...byId.values()]);
+    }finally{
+      state.commentsLoading.delete(targetKey);
+    }
   }
 
   function restoreLocalState(){
@@ -512,15 +658,18 @@
       pages.push(`<button class="${page===state.page?'is-active':''}" type="button" data-page="${page}">${page}</button>`);
     }
     if(state.page < pageCount) pages.push(`<button type="button" data-page="${state.page+1}">›</button>`);
+    if(state.backend === 'supabase' && !state.postsExhausted){
+      pages.push('<button type="button" data-load-more-posts>더 불러오기</button>');
+    }
     els.pagination.innerHTML = pages.join('');
   }
 
-  function applyBoardSearch(event){
+  async function applyBoardSearch(event){
     event.preventDefault();
     state.search = els.boardSearchInput.value.trim();
     state.searchScope = els.searchScope.value;
     state.page = 1;
-    renderList();
+    await refreshServerList();
   }
 
   async function openPost(postId, updateHistory=true){
@@ -531,7 +680,7 @@
     if(state.backend === 'supabase'){
       try{
         await loadServerComments(post.target_key);
-        await db.rpc('record_discussion_view', {
+        await invokeWrite('record_discussion_view', {
           p_target_key:post.target_key,
           p_anonymous_id:state.user ? null : anonymousId()
         });
@@ -600,13 +749,18 @@
       ordered.push(root);
       ordered.push(...rows.filter(row=>String(row.parent_id)===String(root.id)));
     });
+    const orderedIds = new Set(ordered.map(row=>String(row.id)));
+    ordered.push(...rows.filter(row=>!orderedIds.has(String(row.id))));
     els.commentCountLabel.textContent = String(rows.length);
     els.detailComments.textContent = String(rows.length);
     if(!ordered.length){
       els.boardCommentList.innerHTML = '<p class="board-comment-empty">첫 댓글을 남겨보세요.</p>';
       return;
     }
-    els.boardCommentList.innerHTML = ordered.map(comment=>{
+    const loadOlder = state.backend === 'supabase' && !state.commentExhausted.get(post.target_key)
+      ? '<div class="board-comment-actions board-comment-load-more"><button type="button" data-load-older-comments>이전 댓글 더 불러오기</button></div>'
+      : '';
+    els.boardCommentList.innerHTML = loadOlder + ordered.map(comment=>{
       const manageable = canManageComment(comment);
       return `<article class="board-comment ${comment.parent_id ? 'is-reply' : ''}">
         <div class="board-comment-meta">
@@ -662,6 +816,10 @@
 
   async function savePost(event){
     event.preventDefault();
+    if(!state.runtime.writes){
+      setStatus(state.runtime.message || '현재 접속자 급증으로 글 작성을 잠시 중단했습니다.', 'warning');
+      return;
+    }
     const existing = state.editingPostId ? findPost(state.editingPostId) : null;
     const boardType = els.editorBoardType.value;
     const category = els.editorCategory.value;
@@ -720,7 +878,10 @@
           p_anonymous_id: anonymous ? anonymousId() : null,
           p_comments_enabled: els.postCommentsEnabled.checked
         };
-        const result = await withTimeout(db.rpc(functionName, payload), 12000, functionName);
+        const writeRequest = existing
+          ? db.rpc(functionName, payload)
+          : invokeWrite(functionName, payload);
+        const result = await withTimeout(writeRequest, 12000, functionName);
         if(result.error) throw result.error;
         savedId = existing?.id || String(result.data);
         await loadServerPosts();
@@ -794,6 +955,10 @@
 
   async function saveComment(event){
     event.preventDefault();
+    if(!state.runtime.writes){
+      setStatus(state.runtime.message || '현재 접속자 급증으로 댓글 작성을 잠시 중단했습니다.', 'warning');
+      return;
+    }
     const post = currentPost();
     if(!post || !post.comments_enabled) return;
     const content = els.boardCommentInput.value.trim();
@@ -824,7 +989,7 @@
     }
     try{
       if(state.backend === 'supabase'){
-        const result = await withTimeout(db.rpc('create_discussion_comment', {
+        const result = await withTimeout(invokeWrite('create_discussion_comment', {
           p_target_key:post.target_key,
           p_content:content,
           p_parent_id:state.replyTo || null,
@@ -866,7 +1031,25 @@
     }
   }
 
-  function handleCommentAction(event){
+  async function handleCommentAction(event){
+    if(!state.runtime.writes){
+      setStatus(state.runtime.message || '현재 읽기 전용 운영 중입니다.', 'warning');
+      return;
+    }
+    const loadOlder = event.target.closest('[data-load-older-comments]');
+    if(loadOlder){
+      const post = currentPost();
+      if(!post) return;
+      loadOlder.disabled = true;
+      try{
+        await loadServerComments(post.target_key, true);
+        renderComments(post);
+      }catch(_){
+        loadOlder.disabled = false;
+        setStatus('이전 댓글을 불러오지 못했습니다.', 'warning');
+      }
+      return;
+    }
     const button = event.target.closest('[data-comment-action]');
     if(!button) return;
     const comment = findComment(button.dataset.commentId);
@@ -1052,11 +1235,15 @@
   }
 
   async function toggleVote(){
+    if(!state.runtime.writes){
+      setStatus(state.runtime.message || '현재 읽기 전용 운영 중입니다.', 'warning');
+      return;
+    }
     const post = currentPost();
     if(!post) return;
     try{
       if(state.backend === 'supabase'){
-        const result = await withTimeout(db.rpc('toggle_discussion_reaction', {
+        const result = await withTimeout(invokeWrite('toggle_discussion_reaction', {
           p_target_key:post.target_key,
           p_reaction_type:'recommend',
           p_anonymous_id:state.user ? null : anonymousId()
@@ -1082,11 +1269,15 @@
   }
 
   async function reportCurrentPost(){
+    if(!state.runtime.writes){
+      setStatus(state.runtime.message || '현재 읽기 전용 운영 중입니다.', 'warning');
+      return;
+    }
     const post = currentPost();
     if(!post || !confirm('이 게시글을 운영자에게 신고할까요?')) return;
     try{
       if(state.backend === 'supabase'){
-        const result = await withTimeout(db.rpc('report_discussion_target', {
+        const result = await withTimeout(invokeWrite('report_discussion_target', {
           p_target_key:post.target_key,
           p_reason:'user_report',
           p_anonymous_id:state.user ? null : anonymousId()
@@ -1105,7 +1296,7 @@
     if(!comment || !confirm('이 댓글을 운영자에게 신고할까요?')) return;
     try{
       if(state.backend === 'supabase'){
-        const result = await withTimeout(db.rpc('report_discussion_comment', {
+        const result = await withTimeout(invokeWrite('report_discussion_comment', {
           p_comment_id:comment.id,
           p_reason:'user_report',
           p_anonymous_id:state.user ? null : anonymousId()
@@ -1318,6 +1509,23 @@
     }
   }
 
+  async function invokeWrite(action, payload){
+    if(!db?.functions) return {data:null, error:new Error('write gateway unavailable')};
+    const idempotencyKey = globalThis.crypto?.randomUUID
+      ? globalThis.crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const result = await db.functions.invoke(WRITE_GATEWAY_FUNCTION, {
+      body:{
+        action,
+        payload,
+        idempotency_key:idempotencyKey
+      }
+    });
+    if(result.error) return {data:null, error:result.error};
+    if(result.data?.error) return {data:null, error:new Error(result.data.error)};
+    return {data:result.data?.data, error:null};
+  }
+
   function withTimeout(promise, ms, label){
     let timer;
     const timeout = new Promise((_,reject)=>{
@@ -1378,4 +1586,3 @@
       .replaceAll("'",'&#039;');
   }
 })();
-
