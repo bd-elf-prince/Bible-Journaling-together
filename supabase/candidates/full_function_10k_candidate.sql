@@ -109,6 +109,20 @@ create table if not exists public.cb_request_rate_limits (
   primary key (subject_hash, action)
 );
 
+create table if not exists public.cb_outbox (
+  id uuid primary key default gen_random_uuid(),
+  dedupe_key text not null unique,
+  event_type text not null,
+  payload jsonb not null,
+  attempts integer not null default 0 check (attempts between 0 and 20),
+  available_at timestamptz not null default now(),
+  locked_at timestamptz,
+  completed_at timestamptz,
+  last_error text,
+  created_at timestamptz not null default now()
+);
+create index if not exists cb_outbox_ready_idx on public.cb_outbox (available_at, id) where completed_at is null;
+
 alter table public.cb_member_profiles enable row level security;
 alter table public.cb_posts enable row level security;
 alter table public.cb_comments enable row level security;
@@ -117,13 +131,15 @@ alter table public.cb_reports enable row level security;
 alter table public.cb_notifications enable row level security;
 alter table public.cb_request_idempotency enable row level security;
 alter table public.cb_request_rate_limits enable row level security;
+alter table public.cb_outbox enable row level security;
 
 revoke all on public.cb_member_profiles, public.cb_posts, public.cb_comments, public.cb_user_verse_marks, public.cb_reports, public.cb_notifications, public.cb_request_idempotency, public.cb_request_rate_limits from public, anon, authenticated;
 grant select on public.cb_posts, public.cb_comments to anon, authenticated;
 grant select, insert, update, delete on public.cb_member_profiles, public.cb_user_verse_marks to authenticated;
-grant insert on public.cb_reports to anon, authenticated;
 grant select, update on public.cb_notifications to authenticated;
 grant all on public.cb_request_idempotency, public.cb_request_rate_limits to service_role;
+revoke all on public.cb_outbox from public, anon, authenticated;
+grant select, insert, update, delete on public.cb_outbox to service_role;
 
 create policy cb_profiles_self_select on public.cb_member_profiles for select to authenticated using ((select auth.uid()) = user_id);
 create policy cb_profiles_self_insert on public.cb_member_profiles for insert to authenticated with check ((select auth.uid()) = user_id);
@@ -167,6 +183,23 @@ begin
 end $$;
 revoke all on function public.cb_claim_idempotency(text,text,text,text) from public,anon,authenticated;
 grant execute on function public.cb_claim_idempotency(text,text,text,text) to service_role;
+
+create or replace function public.cb_enqueue_outbox(p_dedupe_key text,p_event_type text,p_payload jsonb,p_max_depth integer default 10000)
+returns uuid language plpgsql security definer set search_path = '' as $$
+declare result_id uuid;
+begin
+  if p_max_depth not between 100 and 100000 then raise exception 'invalid_outbox_bound'; end if;
+  if (select count(*) from public.cb_outbox where completed_at is null) >= p_max_depth then
+    raise exception 'outbox_backpressure' using errcode='P0001';
+  end if;
+  insert into public.cb_outbox(dedupe_key,event_type,payload)
+  values(p_dedupe_key,p_event_type,p_payload)
+  on conflict(dedupe_key) do update set dedupe_key=excluded.dedupe_key
+  returning id into result_id;
+  return result_id;
+end $$;
+revoke all on function public.cb_enqueue_outbox(text,text,jsonb,integer) from public,anon,authenticated;
+grant execute on function public.cb_enqueue_outbox(text,text,jsonb,integer) to service_role;
 
 -- Query-plan contract used by staging EXPLAIN tests:
 -- select ... from cb_posts where deleted_at is null and (created_at,id) < ($1,$2)

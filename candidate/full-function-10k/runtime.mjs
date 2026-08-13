@@ -14,7 +14,7 @@ export class CommentBibleCandidate {
   constructor({ clock = Date.now, id = randomUUID, limits = {} } = {}) {
     this.clock = clock; this.id = id;
     this.limits = { write: 30, report: 10, auth: 10, windowMs: 60_000, ...limits };
-    for (const name of ['users','emailIndex','usernameIndex','sessions','posts','comments','marks','reports','notifications','rate','idempotency']) this[name] = new Map();
+    for (const name of ['users','emailIndex','usernameIndex','sessions','posts','comments','marks','reports','notifications','outbox','rate','idempotency']) this[name] = new Map();
     this.available = true;
   }
   setAvailable(value) { this.available = Boolean(value); }
@@ -70,6 +70,8 @@ export class CommentBibleCandidate {
   report({token,anonymousId,targetType,targetId,reason='user_report',idempotencyKey}) { this.requireAvailable(); const actor=this.actor(token,anonymousId); this.consume(actor.key,'report'); if(!['post','comment'].includes(targetType)||String(reason).length>200) throw new HttpError(400,'invalid_report'); return this.once(actor.key,'report',idempotencyKey,{targetType,targetId,reason},()=>{const unique=`${actor.key}:${targetType}:${targetId}`; if(this.reports.has(unique)) throw new HttpError(409,'already_reported'); const row={id:this.id(),actor:actor.key,targetType,targetId,reason,createdAt:nowIso(this.clock)}; this.reports.set(unique,row); return clone(row);}); }
   notify(recipientId,actorId,type,targetId) { if(!recipientId||recipientId===actorId)return; const row={id:this.id(),recipientId,type,targetId,readAt:null,createdAt:nowIso(this.clock)}; this.notifications.set(row.id,row); }
   listNotifications(token) { const userId=this.session(token).userId; return [...this.notifications.values()].filter(row=>row.recipientId===userId).map(clone); }
+  enqueue(eventType,payload,maxDepth=1000) { if(this.outbox.size>=maxDepth) throw new HttpError(503,'outbox_backpressure',5); const row={id:this.id(),eventType,payload:clone(payload),attempts:0,availableAt:nowIso(this.clock),completedAt:null}; this.outbox.set(row.id,row); return clone(row); }
+  drainOutbox(limit=100) { const rows=[...this.outbox.values()].filter(row=>!row.completedAt).slice(0,Math.max(1,Math.min(limit,100))); rows.forEach(row=>{row.attempts+=1;row.completedAt=nowIso(this.clock);}); return rows.map(clone); }
   page(collection,{cursor=null,limit=20,predicate=()=>true}={}) { const bounded=Math.max(1,Math.min(Number(limit)||20,100)); const rows=[...collection.values()].filter(row=>!row.deletedAt&&predicate(row)).sort((a,b)=>b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id)); const found=cursor?rows.findIndex(row=>`${row.createdAt}|${row.id}`===cursor):-1,start=cursor?(found<0?rows.length:found+1):0,data=rows.slice(start,start+bounded),last=data.at(-1); return {data:data.map(clone),nextCursor:start+bounded<rows.length&&last?`${last.createdAt}|${last.id}`:null}; }
   listPosts(options={}) { this.requireAvailable(); return this.page(this.posts,options); }
   listComments({postId=null,verseId=null,...options}={}) { this.requireAvailable(); return this.page(this.comments,{...options,predicate:row=>postId?row.postId===postId:row.verseId===verseId}); }

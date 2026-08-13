@@ -182,7 +182,7 @@ Deno.serve(async (req) => {
     const createActions = new Set(["create_board_post", "create_discussion_comment", "create_anonymous_comment", "create_member_comment"]);
     if (degradation === "emergency") return json(503, { error: "emergency_read_only", retry_after: 60 });
     if (degradation === "severe" && createActions.has(action)) return json(503, { error: "severe_backpressure", retry_after: 30 });
-    if ((degradation === "guarded" || degradation === "severe") && nonCritical.has(action)) return json(202, { data: { deferred: true } });
+    const deferNonCritical = (degradation === "guarded" || degradation === "severe") && nonCritical.has(action);
     const payload = selectPayload(body?.payload, config.keys);
     const anonymousId = String(payload.p_anonymous_id || "");
     if (!userId && !/^[A-Za-z0-9_-]{16,128}$/.test(anonymousId)) {
@@ -198,6 +198,17 @@ Deno.serve(async (req) => {
       auth: { persistSession: false, autoRefreshToken: false },
     });
     const actor = userId ? `user:${userId}` : `anonymous:${anonymousId}`;
+    if (deferNonCritical) {
+      const dedupeKey = await sha256(`outbox:${action}:${actor}:${idempotencyKey}`);
+      const queued = await admin.rpc("cb_enqueue_outbox", {
+        p_dedupe_key: dedupeKey,
+        p_event_type: action,
+        p_payload: { actor, payload },
+        p_max_depth: 10000,
+      });
+      if (queued.error) return json(503, { error: "outbox_backpressure", retry_after: 5 });
+      return json(202, { data: { deferred: true, event_id: queued.data } });
+    }
     const [actorHash, ipHash] = await Promise.all([
       sha256(`write:${action}:${actor}`),
       sha256(`write:${action}:ip:${remoteIp}`),
@@ -225,7 +236,18 @@ Deno.serve(async (req) => {
     const claimRow = Array.isArray(claim.data) ? claim.data[0] : claim.data;
     if (!claimRow?.claimed) { if (claimRow?.cached_response) return json(200, claimRow.cached_response as Record<string, unknown>); return json(409, { error: "request_in_progress" }); }
 
-    const result = await caller.rpc(config.rpc, payload);
+    const result = action === "upsert_user_verse_mark"
+      ? (userId
+        ? await caller.from("user_verse_marks").upsert({
+          user_id: userId,
+          verse_id: payload.p_verse_id,
+          bookmark: Boolean(payload.p_bookmark),
+          highlight: Boolean(payload.p_highlight),
+          memo: payload.p_memo || null,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "user_id,verse_id" }).select("verse_id,bookmark,highlight,memo,updated_at").maybeSingle()
+        : { data: null, error: { code: "42501" } })
+      : await caller.rpc(config.rpc, payload);
     if (result.error) {
       await admin.from("cb_request_idempotency").delete().eq("idempotency_hash", idempotencyHash);
       return json(400, { error: "write_failed", code: result.error.code || null });
