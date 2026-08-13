@@ -1,6 +1,6 @@
 # CURRENT_TASK — CommentBible full-function 10k candidate
 
-- 상태: candidate; 운영 배포·활성화 금지
+- 상태: BLOCKED; 운영 배포·활성화 금지
 - 작성일: 2026-08-14
 - 기준 저장소: `bd-elf-prince/Bible-Journaling-together`
 - 기준 커밋: `374cca38f8b10f30eaaf7e30c67c6eb18091a75b`
@@ -30,7 +30,7 @@
 - [x] 체크포인트 및 누락 감사 문서 확인
 - [x] disabled/우회 쓰기 경로 목록화
 - [x] 공식 Supabase changelog·Auth·RLS·Supavisor·Queues 문서 검토
-- [ ] v5 중앙 gateway와 단계적 degradation 구현
+- [ ] v5 중앙 gateway와 단계적 degradation 구현 — BLOCKED: 운영 RPC 정의/ACL 부재
 - [ ] cursor RPC·RLS/ACL·queue/DLQ·관측 migration candidate 구현
 - [ ] reader/community의 직접 DB 쓰기 제거
 - [ ] Auth/CRUD/RLS/재시도/폭주 계약 테스트 구현
@@ -47,3 +47,21 @@
 - emergency 모드: DB 동적 기능이 차단돼도 정적 성경 읽기는 생존하며 명시적 오류를 반환한다.
 - 격리 환경 10k 목표: read p95 ≤ 500ms, write p95 ≤ 800ms, p99 ≤ 1500ms, HTTP 실패율 < 0.1%, DB CPU 지속 < 70%, DB 연결 < 70%, queue oldest age < 30초.
 - 실제 10k 검증 전에는 “10k 완료”로 표시하지 않는다.
+
+
+## 현재 blocker — 2026-08-14
+
+- 대상 Supabase project ref `rayvvlerwxumqvmodvsy`는 연결된 Supabase 계정의 project 목록에 없다.
+- 저장소에는 운영 `board_posts`/`discussion_comments`의 전체 DDL, write RPC 함수 본문, argument identity, ACL dump가 없다.
+- `supabase/audits/production_preflight.sql`은 catalog dump query만 있으며 실행 결과가 저장되어 있지 않다.
+- 기존 write RPC를 anon/authenticated에서 REVOKE하면 gateway가 caller JWT/RLS로 호출할 수도 없어지고, service_role 호출은 `auth.uid()` 소유권 의미를 잃을 수 있다.
+- 따라서 정확한 catalog/function dump 없이 중앙 gateway 강제·RLS/RPC 교체·CRUD E2E 구현을 진행하지 않는다.
+
+## 재개에 필요한 비밀 없는 입력
+
+다음 중 하나가 정본 branch에 커밋되어야 한다.
+
+1. `supabase/audits/production_preflight.sql`의 민감정보 제거 실행 결과: tables/columns/constraints/indexes/policies/grants/function identity+definition/view definition.
+2. 대상 Supabase 프로젝트를 연결 계정에 read-only로 공유.
+
+실제 행 데이터, 사용자 이메일, 토큰, secret/service key는 필요하지 않다.
