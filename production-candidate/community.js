@@ -3,7 +3,7 @@
 
   const SUPABASE_URL = 'https://rayvvlerwxumqvmodvsy.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_k6jRijBWjC4hcEO--pEHEg_zYI7KGUZ';
-  const WRITE_GATEWAY_FUNCTION = 'write-gateway-v4';
+  const WRITE_GATEWAY_FUNCTION = 'write-gateway-v5';
   const RUNTIME_CONFIG_URL = 'data/runtime-config.json';
   const PAGE_SIZE = 20;
   const POST_WINDOW_SIZE = 100;

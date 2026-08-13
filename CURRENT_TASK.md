@@ -1,67 +1,26 @@
 # CURRENT_TASK — CommentBible full-function 10k candidate
 
-- 상태: BLOCKED; 운영 배포·활성화 금지
-- 작성일: 2026-08-14
-- 기준 저장소: `bd-elf-prince/Bible-Journaling-together`
-- 기준 커밋: `374cca38f8b10f30eaaf7e30c67c6eb18091a75b`
-- 작업 브랜치: `codex/full-function-10k-candidate`
+- 상태: 후보 코드 PASS; 운영 배포 금지
+- 날짜: 2026-08-14
+- branch: codex/full-function-10k-candidate
+- head parent: abf356e800ab0d40f5f001b00a7b0ba65b7a455e
 
-## 목표
+## 완료
+- [x] PR #16·저장소·runtime/Auth/RLS/rate/cache/queue 감사
+- [x] normal 후보에서 Auth·동적 읽기·쓰기 활성
+- [x] 글/댓글/개인 기록 전 쓰기 gateway-v5 통일
+- [x] idempotency payload binding, rate limit, bounded outbox
+- [x] 서버 장애 unavailable 표시와 optimistic rollback
+- [x] 가입/로그인/CRUD/RLS/신고/알림/pagination E2E
+- [x] 10k/50k 무네트워크 부하 모델
+- [x] 독립 P0/P1 재감사: 후보 코드 OPEN P0=0, P1=0
 
-회원가입·이메일 확인·로그인·로그아웃·세션 갱신·비밀번호 복구, 성경 읽기·검색·노트·북마크, 댓글/게시판 CRUD, 신고·차단·감사·관리자 기능을 정상 상태에서 제공하면서 10,000 동시 접속 후보를 검증한다.
+## 검증
+- Node E2E 8/8 PASS
+- 10k 모델: 223.3 dynamic RPS, 19 calculated connections, read p95 243ms, write p95 416ms
+- 50k 모델: 94 calculated connections; single 60-connection budget FAIL
+- frontend syntax/static bypass gate PASS
+- SQL runtime NOT RUN: Postgres/PGlite/Supabase CLI 없음
 
-## 절대 경계
-
-- 운영 `runtime-config.json`, Cloudflare, Supabase 프로젝트를 변경하지 않는다.
-- 운영 읽기 전용 모드를 해제하지 않는다.
-- 실키·실개인정보·운영 부하 시험을 사용하지 않는다.
-- 실제 배포는 별도 명시적 승인 이후에만 가능하다.
-- 기능 차단만으로 10k 대응 완료라고 판정하지 않는다.
-
-## 확인된 기준 상태
-
-- 지정된 `COMMENTBIBLE_FULL_SITE_AUDIT_2026-08-12.md`, `AGENTS.md`, 기존 `CURRENT_TASK.md`는 기준 커밋과 저장소 검색에서 발견되지 않았다.
-- 기준 커밋은 존재한다.
-- `codex/production-upgrade` 현재 head는 기준 이후의 `f2fa1dbc54314b5af4d01de7ea2a99b17cffbc1e`이며 이번 후보에 혼합하지 않는다.
-- 운영 보호 모드는 정적 성경 66권 shard를 유지하고 Auth·동적 읽기·쓰기를 차단한다.
-
-## 이번 후보 작업
-
-- [x] 체크포인트 및 누락 감사 문서 확인
-- [x] disabled/우회 쓰기 경로 목록화
-- [x] 공식 Supabase changelog·Auth·RLS·Supavisor·Queues 문서 검토
-- [ ] v5 중앙 gateway와 단계적 degradation 구현 — BLOCKED: 운영 RPC 정의/ACL 부재
-- [ ] cursor RPC·RLS/ACL·queue/DLQ·관측 migration candidate 구현
-- [ ] reader/community의 직접 DB 쓰기 제거
-- [ ] Auth/CRUD/RLS/재시도/폭주 계약 테스트 구현
-- [ ] k6 격리 adapter 부하 harness 구현
-- [ ] GitHub Actions 클라우드 검증
-- [ ] P0/P1 독립 감사
-- [ ] Draft PR 생성
-
-## 성공 판정
-
-- 정상 모드: 요구된 전체 기능의 계약 테스트가 통과한다.
-- guarded 모드: 사용자 CRUD는 유지하며 비핵심 집계·뷰 이벤트만 backpressure/queue 대상이 된다.
-- severe 모드: 신규 비핵심 쓰기 제한, 기존 콘텐츠 수정·삭제·신고와 Auth 복구는 유지한다.
-- emergency 모드: DB 동적 기능이 차단돼도 정적 성경 읽기는 생존하며 명시적 오류를 반환한다.
-- 격리 환경 10k 목표: read p95 ≤ 500ms, write p95 ≤ 800ms, p99 ≤ 1500ms, HTTP 실패율 < 0.1%, DB CPU 지속 < 70%, DB 연결 < 70%, queue oldest age < 30초.
-- 실제 10k 검증 전에는 “10k 완료”로 표시하지 않는다.
-
-
-## 현재 blocker — 2026-08-14
-
-- 대상 Supabase project ref `rayvvlerwxumqvmodvsy`는 연결된 Supabase 계정의 project 목록에 없다.
-- 저장소에는 운영 `board_posts`/`discussion_comments`의 전체 DDL, write RPC 함수 본문, argument identity, ACL dump가 없다.
-- `supabase/audits/production_preflight.sql`은 catalog dump query만 있으며 실행 결과가 저장되어 있지 않다.
-- 기존 write RPC를 anon/authenticated에서 REVOKE하면 gateway가 caller JWT/RLS로 호출할 수도 없어지고, service_role 호출은 `auth.uid()` 소유권 의미를 잃을 수 있다.
-- 따라서 정확한 catalog/function dump 없이 중앙 gateway 강제·RLS/RPC 교체·CRUD E2E 구현을 진행하지 않는다.
-
-## 재개에 필요한 비밀 없는 입력
-
-다음 중 하나가 정본 branch에 커밋되어야 한다.
-
-1. `supabase/audits/production_preflight.sql`의 민감정보 제거 실행 결과: tables/columns/constraints/indexes/policies/grants/function identity+definition/view definition.
-2. 대상 Supabase 프로젝트를 연결 계정에 read-only로 공유.
-
-실제 행 데이터, 사용자 이메일, 토큰, secret/service key는 필요하지 않다.
+## 배포 전 게이트
+staging project/ref, catalog/RPC 확인, candidate SQL 적용, RLS matrix, EXPLAIN ANALYZE, k6 1k→5k→10k, Auth/SMTP/CAPTCHA/redirect, compute/pooler/Edge/Cloudflare 값을 확정한다. 운영 mutation·배포는 수행하지 않는다.
