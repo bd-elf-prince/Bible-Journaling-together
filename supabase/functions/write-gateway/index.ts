@@ -10,6 +10,15 @@ type ActionConfig = {
 };
 
 const ACTIONS: Record<string, ActionConfig> = {
+  update_board_post: { rpc: "update_board_post", actorLimit: 12, ipLimit: 40, windowSeconds: 600, keys: ["p_post_id","p_title","p_content","p_category","p_comments_enabled","p_password"] },
+  delete_board_post: { rpc: "delete_board_post", actorLimit: 12, ipLimit: 40, windowSeconds: 600, keys: ["p_post_id","p_password"] },
+  update_discussion_comment: { rpc: "update_discussion_comment", actorLimit: 30, ipLimit: 80, windowSeconds: 600, keys: ["p_comment_id","p_content","p_password"] },
+  delete_discussion_comment: { rpc: "delete_discussion_comment", actorLimit: 30, ipLimit: 80, windowSeconds: 600, keys: ["p_comment_id","p_password"] },
+  update_member_comment: { rpc: "update_member_comment", actorLimit: 30, ipLimit: 80, windowSeconds: 600, keys: ["p_comment_id","p_content"] },
+  update_anonymous_comment: { rpc: "update_anonymous_comment", actorLimit: 30, ipLimit: 80, windowSeconds: 600, keys: ["p_comment_id","p_content","p_password"] },
+  delete_member_comment: { rpc: "delete_member_comment", actorLimit: 30, ipLimit: 80, windowSeconds: 600, keys: ["p_comment_id"] },
+  delete_anonymous_comment: { rpc: "delete_anonymous_comment", actorLimit: 30, ipLimit: 80, windowSeconds: 600, keys: ["p_comment_id","p_password"] },
+  upsert_user_verse_mark: { rpc: "upsert_user_verse_mark", actorLimit: 60, ipLimit: 120, windowSeconds: 600, keys: ["p_verse_id","p_bookmark","p_highlight","p_memo"] },
   create_board_post: {
     rpc: "create_board_post",
     actorLimit: 3,
@@ -168,6 +177,12 @@ Deno.serve(async (req) => {
       userId = data.user.id;
     }
 
+    const degradation = String(Deno.env.get("DEGRADATION_LEVEL") || "normal");
+    const nonCritical = new Set(["record_discussion_view", "toggle_discussion_reaction"]);
+    const createActions = new Set(["create_board_post", "create_discussion_comment", "create_anonymous_comment", "create_member_comment"]);
+    if (degradation === "emergency") return json(503, { error: "emergency_read_only", retry_after: 60 });
+    if (degradation === "severe" && createActions.has(action)) return json(503, { error: "severe_backpressure", retry_after: 30 });
+    if ((degradation === "guarded" || degradation === "severe") && nonCritical.has(action)) return json(202, { data: { deferred: true } });
     const payload = selectPayload(body?.payload, config.keys);
     const anonymousId = String(payload.p_anonymous_id || "");
     if (!userId && !/^[A-Za-z0-9_-]{16,128}$/.test(anonymousId)) {
@@ -204,29 +219,20 @@ Deno.serve(async (req) => {
       return json(429, { error: "too_many_requests", retry_after: config.windowSeconds });
     }
 
-    const idempotencyHash = await sha256(`${action}:${actor}:${idempotencyKey}`);
-    const claim = await admin.rpc("claim_request_idempotency", {
-      p_idempotency_hash: idempotencyHash,
-      p_action: action,
-    });
-    if (claim.error) throw new Error("idempotency_unavailable");
-    if (!claim.data) {
-      const cached = await admin.from("request_idempotency")
-        .select("response")
-        .eq("idempotency_hash", idempotencyHash)
-        .maybeSingle();
-      if (cached.data?.response) return json(200, cached.data.response as Record<string, unknown>);
-      return json(409, { error: "request_in_progress" });
-    }
+    const [idempotencyHash, bodyHash] = await Promise.all([sha256(`${action}:${actor}:${idempotencyKey}`), sha256(JSON.stringify(payload))]);
+    const claim = await admin.rpc("cb_claim_idempotency", { p_idempotency_hash: idempotencyHash, p_actor_hash: actorHash, p_action: action, p_body_hash: bodyHash });
+    if (claim.error) { if (claim.error.code === "23505") return json(409, { error: "idempotency_payload_mismatch" }); throw new Error("idempotency_unavailable"); }
+    const claimRow = Array.isArray(claim.data) ? claim.data[0] : claim.data;
+    if (!claimRow?.claimed) { if (claimRow?.cached_response) return json(200, claimRow.cached_response as Record<string, unknown>); return json(409, { error: "request_in_progress" }); }
 
     const result = await caller.rpc(config.rpc, payload);
     if (result.error) {
-      await admin.from("request_idempotency").delete().eq("idempotency_hash", idempotencyHash);
+      await admin.from("cb_request_idempotency").delete().eq("idempotency_hash", idempotencyHash);
       return json(400, { error: "write_failed", code: result.error.code || null });
     }
 
     const responseBody = { data: result.data };
-    await admin.from("request_idempotency").update({
+    await admin.from("cb_request_idempotency").update({
       response: responseBody,
       completed_at: new Date().toISOString(),
     }).eq("idempotency_hash", idempotencyHash);

@@ -852,17 +852,14 @@
     try{
       const isUnified = comment?.backend === 'unified';
       const result = await withTimeout(
-        isUnified
-          ? db.rpc('update_discussion_comment', {
-            p_comment_id: commentId,
-            p_content: content,
-            p_password: password
-          })
-          : db.rpc(memberOwned ? 'update_member_comment' : 'update_anonymous_comment', {
+        invokeWrite(
+          isUnified ? 'update_discussion_comment' : (memberOwned ? 'update_member_comment' : 'update_anonymous_comment'),
+          {
             p_comment_id: commentId,
             p_content: content,
             ...(memberOwned ? {} : {p_password: password})
-          }),
+          }
+        ),
         12000,
         isUnified ? 'unified comment update' : 'anonymous comment update'
       );
@@ -890,15 +887,13 @@
     try{
       const isUnified = comment?.backend === 'unified';
       const result = await withTimeout(
-        isUnified
-          ? db.rpc('delete_discussion_comment', {
-            p_comment_id: commentId,
-            p_password: password
-          })
-          : db.rpc(memberOwned ? 'delete_member_comment' : 'delete_anonymous_comment', {
+        invokeWrite(
+          isUnified ? 'delete_discussion_comment' : (memberOwned ? 'delete_member_comment' : 'delete_anonymous_comment'),
+          {
             p_comment_id: commentId,
             ...(memberOwned ? {} : {p_password: password})
-          }),
+          }
+        ),
         12000,
         isUnified ? 'unified comment delete' : 'anonymous comment delete'
       );
@@ -1584,7 +1579,12 @@
         updated_at: new Date().toISOString()
       };
       const result = await withTimeout(
-        db.from('user_verse_marks').upsert(payload, {onConflict:'user_id,verse_id'}),
+        invokeWrite('upsert_user_verse_mark', {
+          p_verse_id: payload.verse_id,
+          p_bookmark: payload.bookmark,
+          p_highlight: payload.highlight,
+          p_memo: payload.memo
+        }),
         9000,
         'user marks upsert'
       );
