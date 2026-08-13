@@ -1,3 +1,9 @@
+// 스크립트 이름: CommentBible 무네트워크 후보 런타임
+// 버전: 1.0.0
+// 작성일: 2026-08-14
+// 변경사항: Auth·CRUD·격리·제한·멱등성·outbox 후보 구현
+// 용도: 원격 자격 없이 전체 기능 계약 검증
+// 사용자 입력 필요: 없음
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 
 const hash = value => createHash('sha256').update(String(value)).digest('hex');
@@ -76,3 +82,4 @@ export class CommentBibleCandidate {
   listPosts(options={}) { this.requireAvailable(); return this.page(this.posts,options); }
   listComments({postId=null,verseId=null,...options}={}) { this.requireAvailable(); return this.page(this.comments,{...options,predicate:row=>postId?row.postId===postId:row.verseId===verseId}); }
 }
+// 스크립트 끝 — CommentBible 무네트워크 후보 런타임 1.0.0
