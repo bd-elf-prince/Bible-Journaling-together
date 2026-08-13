@@ -1,0 +1,23 @@
+// 스크립트 이름: CommentBible admin insights Edge Function
+// 버전: 1.0.0
+// 작성일: 2026-08-14
+// 변경사항: 서버 검증 관리자 ACL·typed filter·안전 CSV export
+// 용도: /admin/insights 전용 조회 API
+// 사용자 입력 필요: 허용 Origin
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+const MAX_BYTES=8192,EVENTS=new Set(['page_view','bible_read','signup_succeeded','login_succeeded','post_created','comment_created','content_updated','content_deleted','report_created','notification_opened','http_error','rate_limited','request_timing','consent_withdrawn']);
+function origin(req:Request){const incoming=req.headers.get('origin')||'',allowed=(Deno.env.get('ADMIN_ALLOWED_ORIGINS')||'').split(',').map(x=>x.trim()).filter(Boolean);return allowed.includes(incoming)?incoming:(allowed[0]||'null')}
+function json(req:Request,status:number,body:unknown){return new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'private, no-store','access-control-allow-origin':origin(req),'access-control-allow-headers':'authorization, apikey, content-type','access-control-allow-methods':'POST, OPTIONS','vary':'Origin'}})}
+const clean=(value:unknown,max=120)=>String(value??'').replace(/[\u0000-\u001f\u007f]/g,'').slice(0,max);
+function filter(input:any){const login=['all','yes','no'].includes(input?.login)?input.login:'all',event=EVENTS.has(input?.event)?input.event:null,source=/^[A-Za-z0-9.-]{1,120}$/.test(input?.source||'')?input.source:null;return{from:/^\d{4}-\d{2}-\d{2}$/.test(input?.from||'')?input.from:null,to:/^\d{4}-\d{2}-\d{2}$/.test(input?.to||'')?input.to:null,event,source,login}}
+function csvCell(value:unknown){const text=clean(value,240).replace(/\r?\n/g,' '),escaped=/^[=+\-@\t\r]/.test(text)?`'${text}`:text;return `"${escaped.replace(/"/g,'""')}"`}
+Deno.serve(async req=>{
+ if(req.method==='OPTIONS')return new Response('ok',{headers:{'access-control-allow-origin':origin(req),'access-control-allow-headers':'authorization, apikey, content-type','access-control-allow-methods':'POST, OPTIONS','vary':'Origin'}});if(req.method!=='POST')return json(req,405,{error:'method_not_allowed'});
+ try{const text=await req.text();if(new TextEncoder().encode(text).byteLength>MAX_BYTES)return json(req,413,{error:'request_too_large'});const body=JSON.parse(text||'{}'),url=Deno.env.get('SUPABASE_URL'),service=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),anon=Deno.env.get('SUPABASE_ANON_KEY');if(!url||!service||!anon)throw new Error('missing_server_configuration');const authorization=req.headers.get('authorization')||'';if(!authorization.toLowerCase().startsWith('bearer '))return json(req,401,{error:'unauthorized'});const caller=createClient(url,anon,{auth:{persistSession:false,autoRefreshToken:false},global:{headers:{Authorization:authorization}}}),{data:userData,error:userError}=await caller.auth.getUser();if(userError||!userData.user)return json(req,401,{error:'invalid_session'});const admin=createClient(url,service,{auth:{persistSession:false,autoRefreshToken:false}});const acl=await admin.rpc('cb_is_insights_admin',{p_user_id:userData.user.id});if(acl.error)throw new Error('acl_unavailable');if(!acl.data)return json(req,403,{error:'forbidden'});
+   if(body.action==='dashboard'){const days=[1,7,30].includes(Number(body.days))?Number(body.days):7;const result=await admin.rpc('cb_admin_insights_snapshot',{p_days:days});if(result.error)throw new Error('snapshot_failed');return json(req,200,result.data)}
+   if(['visitors','export'].includes(body.action)){const f=filter(body.filters),cursor=/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|\+00(?::00)?)\|[a-f0-9]{64}$/.test(body.cursor||'')?body.cursor:null,limit=Math.max(1,Math.min(body.action==='export'?1000:100,Number(body.limit)||25));const result=await admin.rpc('cb_admin_insights_visitors',{p_from:f.from,p_to:f.to,p_event:f.event,p_source:f.source,p_login:f.login,p_cursor:cursor,p_limit:limit});if(result.error)throw new Error('visitor_query_failed');if(body.action==='visitors')return json(req,200,result.data);const headers=['first_at','visitor_id','session_id','logged_in','masked_user','first_path','last_path','pageviews','actions','source','device','country','last_at'],lines=[headers.map(csvCell).join(',')];for(const row of result.data?.rows||[])lines.push(headers.map(key=>csvCell(row[key])).join(','));return json(req,200,{csv:`\ufeff${lines.join('\r\n')}`})}
+   return json(req,400,{error:'invalid_action'});
+ }catch(error){console.error('admin-insights failed',error instanceof Error?error.message:'unknown_error');return json(req,500,{error:'insights_unavailable'})}
+});
+// 스크립트 끝 — CommentBible admin insights Edge Function 1.0.0

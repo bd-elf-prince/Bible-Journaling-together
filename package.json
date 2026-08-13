@@ -5,9 +5,9 @@
     "bible:shard": "node tools/shard-bible-data.mjs",
     "verify:production-candidate": "node tools/verify-production-candidate.mjs",
     "test:full-function": "node --test tests/full-function-10k.e2e.test.mjs tests/full-function-load-model.test.mjs",
-    "verify:full-function": "node tools/check-full-function-candidate.mjs"
+    "verify:full-function": "node tools/check-full-function-candidate.mjs",
+    "test:admin-insights": "node --test tests/admin-insights.test.mjs",
+    "verify:admin-insights": "node tools/check-admin-insights-candidate.mjs"
   },
-  "dependencies": {
-    "pg": "^8.16.3"
-  }
+  "dependencies": {"pg": "^8.16.3"}
 }
