@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="절마다 작은 코멘트를 남기고 함께 읽는 교환일기 성경책" />
+  <title>Comment Bible</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&family=Noto+Serif+KR:wght@500;600;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="reader-app.css?v=20260802-pc-book-density-01" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#home" aria-label="Comment Bible 홈">
+      <span class="brand-icon" aria-hidden="true"></span>
+      <span>
+        <strong>Comment Bible</strong>
+        <small>함께 말씀을 읽고, 나누고, 기록합니다</small>
+      </span>
+    </a>
+    <nav class="main-nav" aria-label="주요 메뉴">
+      <a class="is-active" href="#reader">성경읽기</a>
+      <a href="community.html?board=news">홈페이지 소식</a>
+      <a href="community.html">커뮤니티</a>
+      <a href="#notes" id="notesNavLink">나의 노트</a>
+    </nav>
+    <form class="search" id="searchForm">
+      <input id="searchInput" type="search" placeholder="구절, 키워드 검색" autocomplete="off" />
+      <button type="submit" aria-label="성경 검색">⌕</button>
+    </form>
+    <div class="top-actions" aria-label="계정 및 설정">
+      <div class="account-control">
+        <button type="button" id="authButton" aria-haspopup="menu" aria-expanded="false">로그인</button>
+        <div class="account-menu" id="accountMenu" role="menu" hidden>
+          <button type="button" id="profileEditButton" role="menuitem">회원정보</button>
+          <button type="button" id="passwordChangeButton" role="menuitem">비밀번호 변경</button>
+          <a id="adminPageLink" href="admin.html" role="menuitem" hidden>관리자 페이지</a>
+          <button type="button" id="logoutButton" role="menuitem">로그아웃</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="rotate-notice" aria-label="모바일 가로모드 안내">
+    <div class="rotate-card">
+      <span class="rotate-icon" aria-hidden="true">↻</span>
+      <h1>가로모드로 이용해주세요</h1>
+      <p>펼친 성경책과 코멘트 패널을 함께 보기 위해 이 화면은 가로모드에 최적화되어 있습니다.</p>
+      <small>휴대폰을 가로로 돌리면 성경책이 열립니다.</small>
+    </div>
+  </section>
+
+  <main class="home-layout" id="home">
+    <section class="home-book-stage" aria-labelledby="homeBookTitle">
+      <a class="closed-bible" href="#reader" aria-label="성경 읽기 시작">
+        <span class="closed-bible-spine" aria-hidden="true"></span>
+        <span class="closed-bible-cover">
+          <span class="closed-bible-rule" aria-hidden="true"></span>
+          <strong id="homeBookTitle">Comment Bible</strong>
+          <span>함께 읽고, 나누고, 기록하는 성경</span>
+          <i class="closed-bible-cross" aria-hidden="true"></i>
+        </span>
+        <span class="closed-bible-pages" aria-hidden="true"></span>
+      </a>
+      <p>책을 눌러 성경 읽기를 시작하세요.</p>
+    </section>
+  </main>
+
+  <main class="layout" id="reader" hidden>
+    <section class="reader-area">
+      <div class="reader-controls">
+        <button class="mobile-bible-picker-button" type="button" id="mobileBiblePickerButton">
+          <span id="mobileBookLabel">창세기</span>
+          <span id="mobileChapterLabel">1장</span>
+        </button>
+        <select id="bookSelect" aria-label="성경 권 선택"></select>
+        <button type="button" id="prevChapter" aria-label="이전 장">‹</button>
+        <select id="chapterSelect" aria-label="장 선택"></select>
+        <button type="button" id="nextChapter" aria-label="다음 장">›</button>
+        <span class="reader-tools" aria-label="읽기 도구">
+          <button type="button" id="bookmarkButton">책갈피</button>
+          <button type="button" id="memoButton" title="선택한 절에 메모 작성">메모</button>
+          <button type="button" id="highlightButton">하이라이트</button>
+          <button type="button" id="copyVerseButton">복사</button>
+        </span>
+      </div>
+
+      <div class="book-frame">
+        <article class="book-page page-left">
+          <header>
+            <h1 id="chapterTitle">창세기 1장</h1>
+            <p id="chapterSubtitle">절마다 남겨진 작은 물방울</p>
+          </header>
+          <div class="verses" id="leftVerses"></div>
+          <footer id="leftPageNo">1</footer>
+        </article>
+        <article class="book-page page-right">
+          <div class="verses" id="rightVerses"></div>
+          <footer id="rightPageNo">2</footer>
+        </article>
+      </div>
+
+      <div class="bottom-controls">
+        <span class="bottom-left-actions">
+          <button type="button" id="settingsButton" aria-label="글자 크기 변경" title="글자 크기 변경">글자 크기</button>
+          <button type="button" id="todayButton">오늘의 말씀</button>
+        </span>
+        <span class="pager">
+          <button type="button" id="firstChapter">처음으로</button>
+          <button type="button" id="prevSpread">‹</button>
+          <span id="progressText">1 / 1189</span>
+          <button type="button" id="nextSpread">›</button>
+          <button type="button" id="lastChapter">마지막으로</button>
+        </span>
+        <button type="button" id="listenButton" title="선택한 절 음성 읽기">듣기</button>
+      </div>
+      <button class="mobile-comment-toggle" type="button" id="commentToggle">선택한 절 코멘트 보기</button>
+      <p class="status" id="statusText" aria-live="polite"></p>
+    </section>
+
+    <aside class="side-panel" id="journal">
+      <button class="panel-close" type="button" id="panelClose" aria-label="코멘트 닫기">×</button>
+      <div class="panel-tabs">
+        <button class="is-active" type="button" id="commentsTab">코멘트</button>
+        <button type="button" id="bookmarksTab">북마크</button>
+      </div>
+
+      <section class="selected-card">
+        <p class="selected-ref" id="selectedRef">창세기 1장 1절</p>
+        <blockquote id="selectedText"></blockquote>
+      </section>
+
+      <section class="comments-card" id="comments">
+        <div class="section-head">
+          <h2 id="commentSectionTitle">이 절에 남겨진 물방울</h2>
+          <div class="comment-head-actions">
+            <span id="commentCount">0</span>
+            <button class="comment-write-button" type="button" id="commentWriteButton">댓글 남기기</button>
+          </div>
+        </div>
+        <div class="comment-list" id="commentList"></div>
+      </section>
+
+      <form class="comment-form" id="commentForm">
+        <div class="comment-form-head">
+          <div>
+            <strong>코멘트 작성</strong>
+            <span>선택한 말씀에 의견을 남겨보세요.</span>
+          </div>
+          <button class="comment-write-close" type="button" id="commentWriteCloseButton" aria-label="코멘트 작성 닫기">×</button>
+        </div>
+        <div class="comment-compose">
+          <div class="comment-password-row" id="commentPasswordRow">
+            <input id="commentAnonymousName" type="text" minlength="1" maxlength="20" autocomplete="off" placeholder="닉네임" />
+            <input id="commentPassword" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="비밀번호" required />
+          </div>
+          <textarea id="commentInput" rows="4" maxlength="1000" placeholder="이 절에 대한 코멘트를 남겨보세요." required></textarea>
+        </div>
+        <div class="form-row">
+          <label hidden><input id="anonymousCheck" type="checkbox" checked /> 익명으로 작성</label>
+          <button type="submit">등록</button>
+        </div>
+      </form>
+
+      <section class="notes-card" id="notes">
+        <h2>함께 열어볼 말씀</h2>
+        <div id="togetherList" class="together-list"></div>
+      </section>
+    </aside>
+  </main>
+
+  <dialog class="bible-picker-dialog" id="biblePickerDialog">
+    <div class="bible-picker-box">
+      <header>
+        <div>
+          <strong>성경 선택</strong>
+          <span>위아래로 밀어서 권과 장을 고르세요.</span>
+        </div>
+        <button type="button" id="biblePickerCloseButton" aria-label="성경 선택 닫기">×</button>
+      </header>
+      <div class="bible-picker-columns">
+        <section>
+          <h2>성경</h2>
+          <div class="bible-picker-list" id="biblePickerBooks"></div>
+        </section>
+        <section>
+          <h2>장</h2>
+          <div class="bible-picker-list" id="biblePickerChapters"></div>
+        </section>
+      </div>
+      <button class="bible-picker-apply" type="button" id="biblePickerApplyButton">선택한 말씀 열기</button>
+    </div>
+  </dialog>
+
+  <dialog class="auth-dialog" id="authDialog">
+    <div class="auth-box">
+      <button class="dialog-close" type="button" id="authCloseButton" aria-label="닫기">×</button>
+      <div class="auth-mode-tabs" id="authModeTabs" role="tablist" aria-label="계정 메뉴">
+        <button class="is-active" type="button" id="loginModeButton" role="tab" aria-selected="true">로그인</button>
+        <button type="button" id="signupModeButton" role="tab" aria-selected="false">회원가입</button>
+      </div>
+
+      <form class="auth-view" id="loginForm">
+        <h2>로그인</h2>
+        <p>가입한 아이디와 비밀번호를 입력하세요.</p>
+        <input id="loginUsername" type="text" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" placeholder="아이디" autocomplete="username" required />
+        <input id="loginPassword" type="password" minlength="8" maxlength="72" placeholder="비밀번호" autocomplete="current-password" required />
+        <button type="submit" id="loginButton">로그인</button>
+        <button class="auth-secondary-button" type="button" id="forgotPasswordButton">비밀번호 찾기</button>
+      </form>
+
+      <form class="auth-view" id="forgotPasswordForm" hidden>
+        <h2>비밀번호 찾기</h2>
+        <p>가입한 이메일로 비밀번호 재설정 링크를 보내드립니다.</p>
+        <input id="forgotPasswordEmail" type="email" maxlength="254" placeholder="가입한 이메일" autocomplete="email" required />
+        <button type="submit">인증 링크 보내기</button>
+        <button class="auth-secondary-button" type="button" id="forgotPasswordBackButton">로그인으로 돌아가기</button>
+      </form>
+
+      <form class="auth-view" id="signupForm" hidden>
+        <h2>회원가입</h2>
+        <p>로그인 아이디와 댓글에 표시할 닉네임을 정한 뒤 이메일 인증을 완료하세요.</p>
+        <div class="signup-check-row">
+          <input id="signupUsername" type="text" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" placeholder="아이디 (영문·숫자·밑줄)" autocomplete="username" required />
+          <button type="button" id="checkUsernameButton">중복 확인</button>
+        </div>
+        <small class="availability-status" id="usernameAvailability" aria-live="polite"></small>
+        <div class="signup-check-row">
+          <input id="signupNickname" type="text" minlength="2" maxlength="20" placeholder="닉네임 (댓글에 표시)" autocomplete="nickname" required />
+          <button type="button" id="checkNicknameButton">중복 확인</button>
+        </div>
+        <small class="availability-status" id="nicknameAvailability" aria-live="polite"></small>
+        <small class="availability-status">닉네임은 가입 후 변경할 수 없습니다.</small>
+        <input id="signupEmail" type="email" maxlength="254" placeholder="이메일" autocomplete="email" required />
+        <input id="signupPassword" type="password" minlength="8" maxlength="72" placeholder="비밀번호 (8자 이상)" autocomplete="new-password" required />
+        <input id="signupPasswordConfirm" type="password" minlength="8" maxlength="72" placeholder="비밀번호 확인" autocomplete="new-password" required />
+        <button type="submit" id="signupButton">이메일 인증 후 가입</button>
+      </form>
+
+      <p id="authStatus" class="auth-status" aria-live="polite"></p>
+    </div>
+  </dialog>
+
+  <dialog class="account-dialog" id="profileDialog">
+    <form class="account-dialog-box" id="profileForm">
+      <button class="dialog-close" type="button" id="profileCloseButton" aria-label="회원정보 닫기">×</button>
+      <h2>회원정보</h2>
+      <label>아이디<input id="profileUsername" type="text" disabled /></label>
+      <label>닉네임<input id="profileNickname" type="text" disabled /></label>
+      <p class="auth-status">닉네임은 가입 후 변경할 수 없습니다.</p>
+      <label>이메일<input id="profileEmail" type="email" disabled /></label>
+      <p id="profileStatus" class="auth-status" aria-live="polite"></p>
+    </form>
+  </dialog>
+
+  <dialog class="account-dialog" id="passwordDialog">
+    <form class="account-dialog-box" id="passwordForm">
+      <button class="dialog-close" type="button" id="passwordCloseButton" aria-label="비밀번호 변경 닫기">×</button>
+      <h2 id="passwordDialogTitle">비밀번호 변경</h2>
+      <input id="newPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" placeholder="새 비밀번호 (8자 이상)" required />
+      <input id="newPasswordConfirm" type="password" minlength="8" maxlength="72" autocomplete="new-password" placeholder="새 비밀번호 확인" required />
+      <button type="submit">비밀번호 저장</button>
+      <p id="passwordStatus" class="auth-status" aria-live="polite"></p>
+    </form>
+  </dialog>
+
+  <dialog class="account-dialog" id="memoDialog">
+    <form class="account-dialog-box" id="memoForm">
+      <button class="dialog-close" type="button" id="memoCloseButton" aria-label="메모 닫기">×</button>
+      <h2 id="memoDialogTitle">말씀 메모</h2>
+      <textarea id="memoInput" rows="7" maxlength="2000" placeholder="선택한 말씀에 개인 메모를 남겨보세요."></textarea>
+      <div class="memo-dialog-actions">
+        <button type="submit">메모 저장</button>
+        <button class="danger-button" type="button" id="memoDeleteButton">메모 삭제</button>
+      </div>
+      <p id="memoStatus" class="auth-status" aria-live="polite"></p>
+    </form>
+  </dialog>
+
+  <dialog class="comment-manage-dialog" id="commentManageDialog">
+    <form class="comment-manage-box" id="commentManageForm">
+      <button class="dialog-close" type="button" id="commentManageCloseButton" aria-label="닫기">×</button>
+      <h2>익명 댓글 수정·삭제</h2>
+      <textarea id="commentEditInput" rows="5" maxlength="1000" aria-label="수정할 댓글 내용" required></textarea>
+      <input id="commentEditPassword" type="password" minlength="8" maxlength="64" autocomplete="current-password" placeholder="작성할 때 설정한 비밀번호" required />
+      <div class="comment-manage-actions">
+        <button type="submit" id="commentUpdateButton">수정 저장</button>
+        <button class="danger-button" type="button" id="commentDeleteButton">삭제</button>
+      </div>
+      <p id="commentManageStatus" class="auth-status" aria-live="polite"></p>
+    </form>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
+  <script src="reader-app.js?v=20260802-pc-book-density-01"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"9ff13dd3a1a94e5cb50d785456fc4b32","r":1}' crossorigin="anonymous"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

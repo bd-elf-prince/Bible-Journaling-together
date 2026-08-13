@@ -1,0 +1,27 @@
+.admin-page{min-height:100dvh;overflow:auto;background:#f5ecdd}
+.admin-page .topbar{grid-template-columns:minmax(250px,390px) 1fr auto}
+.admin-top-actions a,.admin-heading button,.admin-login-link{display:inline-flex;min-height:38px;align-items:center;justify-content:center;border:1px solid #8f6d43;background:#5b3b22;color:#fff8e8;padding:0 16px;text-decoration:none;font-weight:900;box-shadow:3px 3px 0 rgba(55,34,17,.14)}
+.admin-shell{width:min(1040px,calc(100% - 32px));margin:30px auto 60px}
+.admin-heading{display:flex;align-items:end;justify-content:space-between;gap:24px;padding:22px 24px;border:1px solid #a78352;background:#fffaf0;box-shadow:6px 6px 0 rgba(59,38,20,.12)}
+.admin-heading p{margin:0 0 5px;color:#9a6a2e;font-size:.72rem;font-weight:900;letter-spacing:.12em}
+.admin-heading h1{margin:0;color:#372719;font-family:"Noto Serif KR",serif;font-size:1.65rem}
+.admin-heading span{display:block;margin-top:7px;color:#7e674d;font-size:.88rem}
+.admin-status{margin:18px 0;padding:12px 15px;border-left:3px solid #9a6a2e;background:#f0e2cc;color:#543d27;font-weight:800}
+.admin-login-link{width:max-content;margin-bottom:18px}
+.admin-archive-list{display:grid;gap:10px}
+.admin-archive-item{border:1px solid #b6976c;background:#fffdf8;padding:15px 17px;box-shadow:3px 3px 0 rgba(70,43,20,.09)}
+.admin-archive-meta{display:flex;flex-wrap:wrap;gap:7px 13px;margin-bottom:10px;color:#806443;font-size:.78rem;font-weight:800}
+.admin-archive-meta strong{color:#5d3e20}
+.admin-archive-content{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;color:#3f3022;font:inherit;font-size:.88rem;line-height:1.62}
+.admin-empty{padding:54px 20px;border:1px solid #c9b18f;background:#fffaf0;text-align:center;color:#826b50}
+@media (max-width:1100px){
+  .admin-page .topbar{grid-template-columns:1fr auto}
+  .admin-page .main-nav{grid-column:1/-1}
+  .admin-top-actions a{min-height:34px;padding:0 10px;font-size:.78rem}
+  .admin-shell{width:calc(100% - 20px);margin:14px auto 40px}
+  .admin-heading{align-items:start;padding:17px 15px}
+  .admin-heading span{font-size:.8rem}
+  .admin-heading button{min-height:36px;padding:0 10px;font-size:.76rem}
+  .admin-archive-item{padding:12px}
+}
+

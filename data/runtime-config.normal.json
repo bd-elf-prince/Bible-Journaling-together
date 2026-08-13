@@ -1,0 +1,7 @@
+{
+  "mode": "normal",
+  "dynamicReads": true,
+  "writes": true,
+  "auth": true,
+  "message": ""
+}
