@@ -1,7 +1,7 @@
-# CURRENT_TASK — CommentBible full-function 10k + admin insights candidate
+# CURRENT_TASK — CommentBible production reactivation
 
-- 상태: 후보 코드 PASS; 운영 배포 금지
-- 날짜: 2026-08-14
+- 상태: production deployment access blocked; 운영 mutation 0
+- 날짜: 2026-08-16
 - branch: `codex/full-function-10k-candidate`
 - additive parent: `3b25512705da242b257fb29ccfde2e8dac9c0c75`
 - Draft PR: #16 (중복 PR 없음)
@@ -33,3 +33,21 @@
 ## 배포 전 게이트
 
 staging에서 migration dry-run, 관리자 UUID seed, `ANALYTICS_HMAC_KEY`, 허용 Origin, Edge 배포, pg_cron retention/partition, RLS matrix, EXPLAIN ANALYZE, 실제 k6 1k→5k→10k, storage/IOPS quota와 50k rollup·warehouse 전략을 확정한다. main·force push·실배포·실키·실개인정보 mutation은 수행하지 않는다.
+
+## 2026-08-16 production reactivation attempt
+
+- 사용자 승인: production 원상복구·기능 재활성화 승인
+- public URL: `https://commentbible.com/`
+- public indexed state: 성경 읽기 노출, community는 “로컬 작업본”
+- production rollback checkpoint: Cloudflare Worker `d2edb34e-d960-49cc-bc24-81c99874d1ed`
+- GitHub production main: `f38005f2370369b846cd359bea6fc76fdbc00b82`
+- PR #16 head preflight: `0e864a6c04b2d639ebf05bcd9e21e401587bd6b6`
+- candidate runtime: normal / dynamicReads=true / writes=true / auth=true
+- production Supabase ref `rayvvlerwxumqvmodvsy`: connected project 목록에 없고 API는 permission denied
+- connected Supabase projects: AFFFFA 계열만 확인; 오배포 방지를 위해 mutation하지 않음
+- Cloudflare production credential/session: 이 workspace에 없음; 브라우저 접근도 사용자 권한 정책에서 거부됨
+- environment credential names: CommentBible/Supabase/Cloudflare 관련 값 없음
+- migration/Edge/flags/Worker/data mutation: 0
+- production 행수: 권한 부재로 조회 불가; 삭제·초기화·synthetic row 생성 0
+- 재검증: Node 18/18 PASS, remote runtime/gateway/RLS static gate PASS
+- 단일 blocker: 이 workspace에 CommentBible production deployment access(Supabase project + Cloudflare zone)를 연결해야 함
