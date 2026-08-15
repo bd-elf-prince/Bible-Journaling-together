@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="CommentBible 관리자 전용 방문·전환 인사이트">
+  <title>인사이트 | CommentBible 관리자</title>
+  <link rel="stylesheet" href="insights.css?v=20260814-01">
+</head>
+<body>
+  <a class="skip" href="#content">본문으로 건너뛰기</a>
+  <header class="topbar">
+    <a class="brand" href="/index.html"><span aria-hidden="true">✦</span><span><strong>CommentBible</strong><small>ADMIN INSIGHTS</small></span></a>
+    <nav aria-label="관리자 메뉴"><a class="active" href="/admin/insights/">인사이트</a><a href="/admin.html">감사 기록</a><a href="/community.html">커뮤니티</a></nav>
+    <button id="refresh" type="button">새로고침</button>
+  </header>
+
+  <main id="content">
+    <section class="hero">
+      <div><p class="eyebrow">FIRST-PARTY · PRIVACY-SAFE</p><h1>사이트 흐름 인사이트</h1><p>개별 본문·댓글 내용과 작성자 감사 기록은 이 통계에서 분리됩니다.</p></div>
+      <label>기간<select id="range"><option value="1">오늘</option><option value="7" selected>최근 7일</option><option value="30">최근 30일</option></select></label>
+    </section>
+
+    <section id="state" class="state loading" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><strong>권한과 집계를 확인하는 중입니다.</strong><button id="retry" type="button" hidden>다시 시도</button></section>
+    <section id="forbidden" class="state forbidden" hidden><strong>접근 권한이 없습니다.</strong><p>내부 관리자 권한이 활성화된 계정으로 로그인하세요.</p><a href="/index.html?auth=1">로그인으로 이동</a></section>
+
+    <div id="dashboard" hidden>
+      <section class="metrics" id="metrics" aria-label="핵심 지표"></section>
+
+      <section class="grid two">
+        <article class="panel wide"><header><div><p class="eyebrow">HOURLY</p><h2>시간대별 방문 추이</h2></div><span id="trendLegend">방문자 · 페이지뷰</span></header><div id="trendChart" class="chart" role="img" aria-label="시간대별 방문자와 페이지뷰 추이"></div></article>
+        <article class="panel"><header><div><p class="eyebrow">FUNNEL</p><h2>이탈·전환 퍼널</h2></div></header><div id="funnel" class="funnel"></div></article>
+      </section>
+
+      <section class="grid four">
+        <article class="panel"><h2>인기 성경 책·장</h2><ol id="popularBible" class="rank"></ol></article>
+        <article class="panel"><h2>인기 페이지</h2><ol id="popularPages" class="rank"></ol></article>
+        <article class="panel"><h2>유입·UTM</h2><ol id="sources" class="rank"></ol></article>
+        <article class="panel"><h2>기기·브라우저·국가</h2><div id="coarseStats" class="chips"></div></article>
+      </section>
+
+      <section class="panel visitors">
+        <header><div><p class="eyebrow">VISITOR LOG</p><h2>방문자 기록</h2><p>익명화 세션 단위이며 작성자 감사 연결은 제공하지 않습니다.</p></div><button id="exportCsv" type="button">CSV 내보내기</button></header>
+        <form id="filters" class="filters">
+          <label>시작일<input id="from" type="date"></label><label>종료일<input id="to" type="date"></label>
+          <label>이벤트<select id="event"><option value="">전체</option><option value="page_view">페이지뷰</option><option value="bible_read">성경 열람</option><option value="signup_succeeded">가입</option><option value="login_succeeded">로그인</option><option value="post_created">글 작성</option><option value="comment_created">댓글 작성</option><option value="report_created">신고</option><option value="http_error">오류</option><option value="rate_limited">429</option></select></label>
+          <label>유입처<input id="source" maxlength="120" placeholder="example.com"></label>
+          <label>로그인<select id="login"><option value="all">전체</option><option value="yes">로그인</option><option value="no">비로그인</option></select></label>
+          <button type="submit">필터 적용</button>
+        </form>
+        <div class="table-wrap"><table><thead><tr><th>첫 시각</th><th>visitor / session</th><th>로그인</th><th>사용자</th><th>첫 → 마지막 경로</th><th>PV / 행동</th><th>유입</th><th>기기</th><th>국가</th><th>마지막 활동</th></tr></thead><tbody id="visitorRows"></tbody></table></div>
+        <p id="visitorEmpty" class="empty" hidden>조건에 맞는 방문 기록이 없습니다.</p>
+        <div class="pager"><button id="prev" type="button" disabled>이전</button><span id="pageLabel">1 페이지</span><button id="next" type="button" disabled>다음</button></div>
+      </section>
+      <p class="retention">원시 이벤트·세션 30일 · keyed rate digest 2일 · tombstone 35일 · 일별 집계 760일. 마지막 집계 <time id="generatedAt">—</time></p>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script>
+  <script src="insights.js?v=20260814-01"></script>
+</body>
+</html>

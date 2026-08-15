@@ -3,7 +3,7 @@
 
   const SUPABASE_URL = 'https://rayvvlerwxumqvmodvsy.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_k6jRijBWjC4hcEO--pEHEg_zYI7KGUZ';
-  const WRITE_GATEWAY_FUNCTION = 'write-gateway-v4';
+  const WRITE_GATEWAY_FUNCTION = 'write-gateway-v5';
   const RUNTIME_CONFIG_URL = 'data/runtime-config.json';
   const PAGE_SIZE = 20;
   const POST_WINDOW_SIZE = 100;
@@ -377,13 +377,16 @@
       await loadServerPosts();
       setBackend('supabase', '공통 게시판 엔진 서버에 연결되었습니다.', 'success');
     }catch(_){
-      setBackend('local', '게시판 후보 SQL이 아직 적용되지 않아 이 브라우저에만 저장합니다.');
+      state.posts = [];
+      state.comments = [];
+      setBackend('unavailable', '게시판 서버에 연결하지 못했습니다. 로컬 성공으로 대체하지 않으며 다시 연결해 주세요.');
+      disableDynamicControls();
     }
   }
 
   function setBackend(mode, message, tone='warning'){
     state.backend = mode;
-    els.backendMode.textContent = mode === 'supabase' ? '서버' : mode === 'surge' ? '읽기 전용' : '로컬 작업본';
+    els.backendMode.textContent = mode === 'supabase' ? '서버' : mode === 'surge' ? '읽기 전용' : mode === 'unavailable' ? '연결 오류' : '로컬 작업본';
     els.engineStatus.textContent = message;
     els.engineStatus.className = `engine-status is-${tone}`;
   }
@@ -878,9 +881,7 @@
           p_anonymous_id: anonymous ? anonymousId() : null,
           p_comments_enabled: els.postCommentsEnabled.checked
         };
-        const writeRequest = existing
-          ? db.rpc(functionName, payload)
-          : invokeWrite(functionName, payload);
+        const writeRequest = invokeWrite(functionName, payload);
         const result = await withTimeout(writeRequest, 12000, functionName);
         if(result.error) throw result.error;
         savedId = existing?.id || String(result.data);
@@ -1163,7 +1164,7 @@
     if(!post) return;
     try{
       if(state.backend === 'supabase'){
-        const result = await withTimeout(db.rpc('delete_board_post', {
+        const result = await withTimeout(invokeWrite('delete_board_post', {
           p_post_id:post.id,
           p_password:password || null
         }), 12000, 'delete board post');
@@ -1188,7 +1189,7 @@
     if(next === null || !next.trim()) return;
     try{
       if(state.backend === 'supabase'){
-        const result = await withTimeout(db.rpc('update_discussion_comment', {
+        const result = await withTimeout(invokeWrite('update_discussion_comment', {
           p_comment_id:comment.id,
           p_content:next.trim(),
           p_password:password || null
@@ -1213,7 +1214,7 @@
     if(!comment) return;
     try{
       if(state.backend === 'supabase'){
-        const result = await withTimeout(db.rpc('delete_discussion_comment', {
+        const result = await withTimeout(invokeWrite('delete_discussion_comment', {
           p_comment_id:comment.id,
           p_password:password || null
         }), 12000, 'delete discussion comment');

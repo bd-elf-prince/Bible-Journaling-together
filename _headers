@@ -36,3 +36,7 @@
 
 /data/runtime-config.surge.json
   Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+/admin/insights/*
+  Cache-Control: private, no-store
+  X-Robots-Tag: noindex, nofollow
