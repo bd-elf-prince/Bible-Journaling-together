@@ -51,3 +51,25 @@ staging에서 migration dry-run, 관리자 UUID seed, `ANALYTICS_HMAC_KEY`, 허�
 - production 행수: 권한 부재로 조회 불가; 삭제·초기화·synthetic row 생성 0
 - 재검증: Node 18/18 PASS, remote runtime/gateway/RLS static gate PASS
 - 단일 blocker: 이 workspace에 CommentBible production deployment access(Supabase project + Cloudflare zone)를 연결해야 함
+
+## 2026-09-05 댓글 장애 재검증
+
+- 사용자 승인 범위: 기존 데이터 보존 상태의 운영 기능 정상화
+- 작업 branch: `codex/comment-write-recovery-v7` (additive, `ad54ef1` 기반)
+- 공개 사이트: HTTP 200, runtime `normal`, writes/auth/dynamicReads=true
+- 실제 화면 재현: Genesis 1:1 댓글 조회 실패 및 서버 연결 오류 UI
+- 배포 gateway: `write-gateway-v4`
+- 운영 Supabase ref: `rayvvlerwxumqvmodvsy`
+- 운영 Supabase REST/Edge: HTTP 502 `connection refused`
+- 대조: 연결된 활성 Supabase REST는 HTTP 401로 정상 응답
+- 연결된 Supabase 목록: CommentBible 없음; 다른 두 프로젝트에는 mutation 0
+- Cloudflare: 현재 연결 없음; 과거 rollback version의 현재 유효성 미확인
+- 데이터 수/표본/DB backup: 운영 DB 접근 불가로 미확인(0으로 오기록하지 않음)
+- 추가 파일: 재실행 가능한 읽기 전용 preflight·단위 테스트·incident 기록
+- 자동검증: Node 21/21 PASS, 새 preflight 3/3 PASS, 정적 게이트 2종 PASS, 구문/UTF-8/민감정보 PASS
+- 실제 preflight: `2026-09-05T15:55:44.312Z`, site 200 / API 502 / gateway 502 / 공개 count 미확인 / mutation 0
+- PostgreSQL/RLS/RPC/Edge 및 회원·익명 smoke: NOT RUN — 운영 프로젝트 접근 불가
+- 운영 mutation/배포/SQL/Edge/Worker 변경: 0
+- 최신 감사: v5/v6 보안 요구 중 OPEN P0 5, P1 4
+- 배포 판정: **금지 유지**
+- 단일 권한 blocker: `rayvvlerwxumqvmodvsy` 소유 Supabase 연결과 `commentbible.com` Cloudflare 연결
